@@ -1,78 +1,89 @@
-from abc import abstractmethod, ABC
-from pgn.token_type import TokenType
+from abc import ABC
+from abc import abstractmethod
+from dataclasses import dataclass
+from dataclasses import field
+from typing import List
+
 from pgn.pgn_token import Token
 
+
+@dataclass
 class Expr(ABC):
     def accept(self, visitor):
         visitor.visit_expr(self)
 
+
+@dataclass
 class TagPair(Expr):
-    def __init__(self, tag_name: Token, tag_value: Token):
-        self._tag_name = tag_name
-        self._tag_value = tag_value
+    tag_name: Token
+    tag_value: Token
 
     def accept(self, visitor):
         visitor.visit_event_tag(self)
 
-class PGNMove(Expr):
-    def __init__(self, move: Token):
-        self._move = move
 
+@dataclass
+class Element(Expr):  # a move
+    move: Token
+
+
+@dataclass
 class PGNGameResult(Expr):
-    def __init__(self, result: Token):
-        self._result = result
+    result: Token
 
+
+@dataclass
 class TagPair(Expr):
-    def __init(self, tag_name, tag_value):
-        self._tag_name = tag_name
-        self._tag_value = tag_value
+    tag_name: Token
+    tag_value: Token
 
+
+@dataclass
 class TagSection(Expr):
-    def __init__(self):
-        self._tag_pairs = []
+    tag_pairs: List[TagPair] = field(init=False, default_factory=list)
+
     def append_tag_pair(self, event_tag: TagPair):
-        self._tag_pairs.append(event_tag)
+        self.tag_pairs.append(event_tag)
 
-class MoveSection(Expr):
-    def __init__(self):
-        self._moves = []
 
-    def append_move(self, move: PGNMove):
-        self._moves.append(move)
+@dataclass
+class MoveNumber(Expr):
+    move_number: int
 
-class PGNGame(Expr):
-    def __init__(self):
-        self._tag_section = None
-        self._move_section = None
 
-    def set_tag_section(self, tag_section: TagSection):
-        self._tag_section = tag_section
+@dataclass
+class Element(Expr):
+    move_number_indication: MoveNumber = field(init=True)
+    san_moves: List[Token] = field(init=False, default_factory=list)
+    comments: List[str] = field(init=False, default_factory=list)
 
-    def set_move_section(self, move_section: MoveSection):
-        self._move_section = move_section
+    def add_move(self, san_move: Token):
+        self.san_moves.append(san_move)
 
+    def add_comment(self, comment: str):
+        self.comments.append(comment)
+
+
+@dataclass
 class ElementSequence(Expr):
-    def __init__(self):
-        self._result: PGNGameResult
+    elements: List[Element] = field(default_factory=list)
 
 
-class MoveSection(Expr):
-    def __init__(self):
-        self._result: PGNGameResult
-
-    def set_element_sequence(self, seq: ElementSequence):
-        self._element_sequence = seq
-
-    def set_result(self, result: PGNGameResult):
-        self._result = result
+@dataclass
+class MoveText(Expr):
+    element_sequence: ElementSequence
+    result: PGNGameResult
 
 
+@dataclass
+class PGNGame(Expr):
+    tag_section: TagSection
+    move_text: MoveText
+
+
+@dataclass
 class PGNDatabase(Expr):
-    def __init__(self):
-        self._games = []
-
-    def append(self, pgn_game: PGNGame):
-        self._games.append(pgn_game)
+    games: List[PGNGame] = field(default_factory=list)
 
 
 class Visitor(ABC):
@@ -91,4 +102,4 @@ class PrintASTVisitor(Visitor):
         print(f"visiting {expr}")
 
     def visit_event_tag(self, event_tag: TagPair):
-        print(f"visiting event tag {event_tag}")
+        print(f"visiting event tag {event_tag.tag_name}")

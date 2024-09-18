@@ -3,9 +3,12 @@
 http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#:~:text=PGN%20is%20%22Portable%20Game%20Notation,and%20generation%20by%20computer%20programs.
 
 """
+import re
+
+from pgn.pgn_token import Token
 from pgn.token_type import TokenType
 from pgn.token_type import get_keyword
-from pgn.pgn_token import Token
+
 
 class Scanner:
     """ scanner for PGN files """
@@ -41,16 +44,16 @@ class Scanner:
             self._start = self._current
             self.__scan_token()
 
-        self._tokens.append(Token(TokenType.EOF, lexeme=None, literal=None, line=-1))
+        self._tokens.append(Token(TokenType.EOF, lexeme="", literal=None, line=-1))
         return self._tokens
 
     def __scan_token(self):
         ch = self.__advance()
         match ch:
             case "[":
-                self.__add_token(TokenType.LEFT_TAG)
+                self.__add_token(TokenType.LEFT_BRACKET)
             case "]":
-                self.__add_token(TokenType.RIGHT_TAG)
+                self.__add_token(TokenType.RIGHT_BRACKET)
 
             case "{":
                 self.__add_token(TokenType.LEFT_BRACE_COMMENT)
@@ -59,34 +62,32 @@ class Scanner:
 
             case '\n':
                 self._line = self._line + 1
-
-            case ' ':
-                pass # ignore whitespace
-            case '\r':
-                pass # ignore whitespace
-            case '\t':
-                pass # ignore whitespace
-            #case ch if ch.isdigit():
-                #self.__number()
-            case _ if self.__is_identifier_char(ch): # handle unexpected chars in the input
-               self.__identifier()
+            case _ if self.__is_integer(ch):  # INTEGER
+                self.__integer()
+            case '.': # PERIOD
+                self.__add_token(TokenType.PERIOD)
+            case _ if self.__is_symbol(ch): # SYMBOL
+               self.__symbol()
+            case _ if self.__is_string_prefix(ch): # STRING
+                self.__string()
+            case _ if self.__is_whitespace(ch):  # SPACES
+                pass
             case _:
                 self._errors += (self._line, f"unexpected char: {ch}")
 
-    def __match(self, expected):
+    def __match(self, callback_function):
         """
         Conditional advance()
         Only consume the char if it's what we are looking for
         """
+        matched = False
+        while not self.__at_end() and callback_function(self._source[self._current]):
+            self._current = self._current + 1
+            matched = True
 
-        if not self.__at_end():
-            return False
-
-        if self._source[self._current] != expected:
-            return False
-
-        self._current = self._current + 1
-        return True
+      #  if matched:
+         #   print(f"matched: {self._source[self._start : self._current]}")
+        return matched
 
     def __advance(self):
         """ consume and return the next char in the source file """
@@ -108,20 +109,19 @@ class Scanner:
         text = self._source[self._start : self._current]
         self._tokens.append(Token(token_type, text, literal, self._line))
 
-    def __number(self):
-        while self.__peek().isdigit():
-            self.__advance()
 
-        self.__add_token(TokenType.NUMBER, int(self._source[self._start : self._current]))
+    def __is_integer(self, ch):
+        # a digit should be followed by another digit, a period or whitespace
+        return ch.isdigit() and (self.__peek().isdigit() or self.__peek() in [' ', '\n', '\t'] or self.__peek() == '.')
 
-        if self.__peek() == '.':  # Consume the "." on the move numbering
-            self.__advance()
+    def __integer(self):
+        self.__match(lambda c : c.isdigit())
+        self.__add_token(TokenType.INTEGER, int(self._source[self._start : self._current]))
 
-
-    def __identifier(self):
-        """ create an identifier token """
-        while self.__is_identifier_char(self.__peek()):
-            self.__advance()
+    def __symbol(self):
+        """ create a symbol token """
+        # [a-zA-Z0-9_+#=:-]*
+        self.__match(lambda c: Scanner.__is_symbol(c))
 
         # add the keyword type if we have one
         text = self._source[self._start : self._current]
@@ -129,14 +129,36 @@ class Scanner:
         if keyword_token_type:
             self.__add_token(keyword_token_type)
         else:
-            # TODO this might be an error if we only have keywords....
-            self.__add_token(TokenType.IDENTIFIER)
+            # otherwise, it's a symbol
+            self.__add_token(TokenType.SYMBOL)
 
-    def __is_identifier_char(self, ch):
-        """ what is the total set of characters that make up an identifier in PGN? """
-        # alpha
-        # numeric
-        # - (for castling) or draw indicator
-        return ch.isalnum() or ch in ['-', '/']
+    @staticmethod
+    def __is_symbol(ch):
+        is_suffix = re.match(r'[a-zA-Z0-9_+#=:/-]+', ch)
+        return is_suffix
 
+    @staticmethod
+    def __is_string_prefix(ch):
+        return ch == r'"'
 
+    def __string(self):
+        """
+/// A string token is a sequence of zero or more printing characters delimited by a
+/// pair of quote characters (ASCII decimal value 34, hexadecimal value 0x22).  An
+/// empty string is represented by two adjacent quotes.  (Note: an apostrophe is
+/// not a quote.)  A quote inside a string is represented by the backslash
+/// immediately followed by a quote.  A backslash inside a string is represented by
+/// two adjacent backslashes.  Strings are commonly used as tag pair values (see
+/// below).  Non-printing characters like newline and tab are not permitted inside
+/// of strings.  A string token is terminated by its closing quote.  Currently, a
+/// string is limited to a maximum of 255 characters of data.
+        :return:
+        """
+
+        self.__match(lambda c : c.isalpha() or c.isdigit() or c in ['"', ".", "\\", "/", ' ', ',', '-'] )
+        self.__match(lambda c : c == '"')
+        self.__add_token(TokenType.STRING)
+
+    @staticmethod
+    def __is_whitespace(ch):
+        return re.match("[ \r\t]", ch)

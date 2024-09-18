@@ -1,6 +1,7 @@
 from pgn.expr import PrintASTVisitor
-from pgn.scanner import Scanner
 from pgn.parser import Parser
+from pgn.scanner import Scanner
+
 
 def main():
     #https://en.wikipedia.org/wiki/Portable_Game_Notation
@@ -31,6 +32,9 @@ Nf2 42.g4 Bd3 43.Re6 1/2-1/2
 
     parser = Parser(scanner.tokens())
     ast = parser.parse()
+    if parser.has_errors():
+        parser.print_errors()
+
     visitor = PrintASTVisitor()
     ast.accept(visitor)
 
