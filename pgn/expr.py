@@ -88,7 +88,7 @@ class PGNDatabase(Expr):
 
 class Visitor(ABC):
     @abstractmethod
-    def visit_expr(self, expr):
+    def visit_expr(self, expr: Expr):
         pass
 
     @abstractmethod
@@ -98,7 +98,7 @@ class Visitor(ABC):
 
 class PrintASTVisitor(Visitor):
 
-    def visit_expr(self, expr):
+    def visit_expr(self, expr: Expr):
         print(f"visiting {expr}")
 
     def visit_event_tag(self, event_tag: TagPair):

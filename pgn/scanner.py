@@ -109,10 +109,9 @@ class Scanner:
         text = self._source[self._start : self._current]
         self._tokens.append(Token(token_type, text, literal, self._line))
 
-
     def __is_integer(self, ch):
         # a digit should be followed by another digit, a period or whitespace
-        return ch.isdigit() and (self.__peek().isdigit() or self.__peek() in [' ', '\n', '\t'] or self.__peek() == '.')
+        return ch.isdigit() and (self.__peek().isdigit() or self.__peek() in [' ', '\n', '\t', '.'])
 
     def __integer(self):
         self.__match(lambda c : c.isdigit())
