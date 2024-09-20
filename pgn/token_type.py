@@ -1,55 +1,48 @@
-from enum import Enum
-from enum import unique, auto
 
-@unique
-class TokenType(Enum):
-    # single char tokens
-    LEFT_BRACKET = auto()
-    RIGHT_BRACKET = auto()
+# single char tokens
+LEFT_BRACKET = 1
+RIGHT_BRACKET = 2
 
-    LEFT_BRACE_COMMENT = auto()
-    RIGHT_BRACE_COMMENT = auto()
+LEFT_BRACE_COMMENT = 3
+RIGHT_BRACE_COMMENT = 4
 
-    INTEGER = auto() # ie the number prefixing a pair of moves
-    PERIOD = auto() # after the move number indication
+INTEGER = 5 # ie the number prefixing a pair of moves
+PERIOD = 6 # after the move number indication
 
-    SYMBOL = auto() # [a-zA-Z0-9] [a-zA-Z0-9_+#=:-]*
-    STRING = auto()  # ('\\\\' | '\\"' | ~[\\"])*
+SYMBOL = 7 # [a-zA-Z0-9] [a-zA-Z0-9_+#=:-]*
+STRING = 8  # ('\\\\' | '\\"' | ~[\\"])*
 
-    # keywords
-    RESULT_DRAW = auto() #  "1/2-1/2"
-    RESULT_WHITE_WIN =  auto() # 1-0 (digit 1 dash digit zero)
-    RESULT_BLACK_WIN =  auto() # 0-1 (digit zero dash digit 1)
-    RESULT_GAME_UNFINISHED = auto() # "*" indicates game abandoned unfinished or still in progress (etc)
+# keywords
+RESULT_DRAW = 9 #  "1/2-1/2"
+RESULT_WHITE_WIN =  10 # 1-0 (digit 1 dash digit zero)
+RESULT_BLACK_WIN =  11 # 0-1 (digit zero dash digit 1)
+RESULT_GAME_UNFINISHED = 22 # "*" indicates game abandoned unfinished or still in progress (etc)
 
-    EOF = auto()
+EOF = 99
 
-    # non-terminal tokens (for parser)
-    TAG_PAIR = auto()
-
-
-
+# non-terminal tokens (for parser)
+TAG_PAIR = 1000
 
 
 KEYWORDS = {
-    # "O-O": TokenType.CASTLE_KINGS_SIDE,
-    # "O-O-O": TokenType.CASTLE_QUEENS_SIDE,
-    # "x": TokenType.TAKES,
-    # "Event": TokenType.TAG_EVENT,
-    # "Site" : TokenType.TAG_SITE,
-    # "Date": TokenType.TAG_DATE,
-    # "Round": TokenType.TAG_ROUND,
-    # "White": TokenType.TAG_WHITE,
-    # "Black": TokenType.TAG_BLACK,
-    # "Result": TokenType.TAG_RESULT,
-    "1-0": TokenType.RESULT_WHITE_WIN,
-     "0-1": TokenType.RESULT_BLACK_WIN,
-     "1/2-1/2": TokenType.RESULT_DRAW,
-     "*": TokenType.RESULT_GAME_UNFINISHED
-    # "+": TokenType.CHECK,
-    # "#": TokenType.CHECKMATE
+    # "O-O": token_type.CASTLE_KINGS_SIDE,
+    # "O-O-O": token_type.CASTLE_QUEENS_SIDE,
+    # "x": token_type.TAKES,
+    # "Event": token_type.TAG_EVENT,
+    # "Site" : token_type.TAG_SITE,
+    # "Date": token_type.TAG_DATE,
+    # "Round": token_type.TAG_ROUND,
+    # "White": token_type.TAG_WHITE,
+    # "Black": token_type.TAG_BLACK,
+    # "Result": token_type.TAG_RESULT,
+    "1-0": RESULT_WHITE_WIN,
+     "0-1": RESULT_BLACK_WIN,
+     "1/2-1/2": RESULT_DRAW,
+     "*": RESULT_GAME_UNFINISHED
+    # "+": token_type.CHECK,
+    # "#": token_type.CHECKMATE
 }
 
 
-def get_keyword(identifier):
+def get_pgn_keyword(identifier):
     return KEYWORDS.get(identifier)
