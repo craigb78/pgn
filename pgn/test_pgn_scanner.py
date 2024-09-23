@@ -1,10 +1,10 @@
 import unittest
 
-from pgn.scanner import Scanner
-from pgn.parser import Parser
+from pgn.pgn_scanner import PGNScanner
+from pgn.pgn_parser import PGNParser
 
 
-class ScannerTestCase(unittest.TestCase):
+class PGNScannerTestCase(unittest.TestCase):
     # https://en.wikipedia.org/wiki/Portable_Game_Notation
     # Here is the PGN format of the 29th game of the 1992 match played in Yugoslavia between Bobby Fischer and Boris Spassky:
     belgrade_fischer_spassky = """[Event "F/S Return Match"]
@@ -26,14 +26,14 @@ class ScannerTestCase(unittest.TestCase):
        """
 
     def test_simple_game_with_comments(self):
-        scanner = Scanner(self.belgrade_fischer_spassky)
+        scanner = PGNScanner(self.belgrade_fischer_spassky)
         scanner.scan_tokens()
         scanner.print_tokens()
         if scanner.has_errors():
             scanner.print_errors()
             self.fail("Scanner found errors")
 
-        parser = Parser(scanner.tokens())
+        parser = PGNParser(scanner.tokens())
         ast = parser.parse()
         if parser.has_errors():
             parser.print_errors()

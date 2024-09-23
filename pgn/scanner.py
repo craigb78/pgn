@@ -48,6 +48,19 @@ class Scanner:
 
         return matched
 
+    def match_once(self, ch):
+        """
+        Match a char
+        Conditional advance()
+        Only consume the char if it's what we are looking for
+        """
+        matched = False
+        if not self.at_end() and ch == self.__source[self.__current]:
+            self.__current = self.__current + 1
+            matched = True
+
+        return matched
+
     def advance(self):
         """ consume and return the next char in the source file """
         current_char = self.__source[self.__current]
@@ -74,3 +87,6 @@ class Scanner:
 
     def increment_line(self):
         self.__line = self.__line + 1
+
+    def line(self):
+        return self.__line

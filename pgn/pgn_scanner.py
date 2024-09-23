@@ -37,7 +37,7 @@ class PGNScanner:
             case _ if self.__is_whitespace(ch):  # SPACES
                 pass
             case _:
-                self.__errors.add_error(self.scanner.line(), f"unexpected char: {ch}")
+                self.__errors.add_error(self.__scanner.line(), f"unexpected char: {ch}")
 
     def __is_integer(self, ch):
         # a digit should be followed by another digit, a period or whitespace
@@ -62,8 +62,7 @@ class PGNScanner:
             self.__scanner.add_token(token_type.SYMBOL)
 
     def __is_symbol(self, ch):
-        is_suffix = re.match(r'[a-zA-Z0-9_+#=:/-]+', ch)
-        return is_suffix
+        return ch in r'[a-zA-Z0-9_+#=:/-]'
 
     def __is_string_prefix(self, ch):
         return ch == r'"'
