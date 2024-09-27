@@ -1,5 +1,5 @@
-WHITE=2**0
-BLACK=2**1
+WHITE=2**50
+BLACK=2**51
 
 
 def piece_colour_to_str(piece_colour):

@@ -47,9 +47,3 @@ def get_icon(colour, piece_type) -> str:
             return BLACK_KING
 
     return ' ' # blank square
-
-def print_board():
-    print(BLACK_PAWN*7)
-
-if __name__ == '__main__':
-    print_board()
