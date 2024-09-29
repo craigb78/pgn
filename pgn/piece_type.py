@@ -19,3 +19,19 @@ def piece_type_to_str(piece_type):
     if piece_type == PAWN:
         return 'P'
     return None
+
+
+def str_to_piece_type(ch):
+    if ch == 'K':
+        return KING
+    if ch == 'Q':
+        return QUEEN
+    if ch == 'B':
+        return BISHOP
+    if ch == 'N':
+        return KNIGHT
+    if ch == 'R':
+        return ROOK
+    if ch == 'P':
+        return PAWN
+

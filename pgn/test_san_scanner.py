@@ -1,8 +1,6 @@
 import unittest
-
-import token_type
+import pgn.token_type as token_type
 from pgn.san_scanner import SANScanner
-
 
 class SANScannerTest(unittest.TestCase):
 
@@ -29,23 +27,33 @@ class SANScannerTest(unittest.TestCase):
     def test_san_scan_1(self):
         tokens = self.scan("e4 e5")
 
-        self.assertEqual(tokens[0].tt, token_type.E)
-        self.assertEqual(tokens[1].tt, token_type._4)
+        self.assertEqual(tokens[0].tt, token_type.COL)
+        self.assertEqual(tokens[0].lexeme, 'e')
+        self.assertEqual(tokens[1].tt, token_type.ROW)
+        self.assertEqual(tokens[1].lexeme, '4')
 
-        self.assertEqual(tokens[2].tt, token_type.E)
-        self.assertEqual(tokens[3].tt, token_type._5)
+        self.assertEqual(tokens[2].tt, token_type.COL)
+        self.assertEqual(tokens[2].lexeme, 'e')
+        self.assertEqual(tokens[3].tt, token_type.ROW)
+        self.assertEqual(tokens[3].lexeme, '5')
 
         self.assertEqual(tokens[4].tt, token_type.EOF)
 
     def test_san_scan_2(self):
         tokens = self.scan("Nf3 Nf6")
 
-        self.assertEqual(tokens[0].tt, token_type.KNIGHT)
-        self.assertEqual(tokens[1].tt, token_type.F)
-        self.assertEqual(tokens[2].tt, token_type._3)
-        self.assertEqual(tokens[3].tt, token_type.KNIGHT)
-        self.assertEqual(tokens[4].tt, token_type.F)
-        self.assertEqual(tokens[5].tt, token_type._6)
+        self.assertEqual(tokens[0].tt, token_type.PIECE_TYPE)
+        self.assertEqual(tokens[0].lexeme, 'N')
+        self.assertEqual(tokens[1].tt, token_type.COL)
+        self.assertEqual(tokens[1].lexeme, 'f')
+        self.assertEqual(tokens[2].tt, token_type.ROW)
+        self.assertEqual(tokens[2].lexeme, '3')
+        self.assertEqual(tokens[3].tt, token_type.PIECE_TYPE)
+        self.assertEqual(tokens[3].lexeme, 'N')
+        self.assertEqual(tokens[4].tt, token_type.COL)
+        self.assertEqual(tokens[4].lexeme, 'f')
+        self.assertEqual(tokens[5].tt, token_type.ROW)
+        self.assertEqual(tokens[5].lexeme, '6')
         self.assertEqual(tokens[6].tt, token_type.EOF)
 
         # parser = SANParser(scanner.tokens())
@@ -57,10 +65,12 @@ class SANScannerTest(unittest.TestCase):
     def test_san_scan_6(self):
         tokens = self.scan("exd6e.p. Nxd6")
 
-        self.assertEqual(tokens[0].tt, token_type.E)
+        self.assertEqual(tokens[0].tt, token_type.COL)
+        self.assertEqual(tokens[0].lexeme, 'e')
         self.assertEqual(tokens[1].tt, token_type.CAPTURE)
-        self.assertEqual(tokens[2].tt, token_type.D)
-        self.assertEqual(tokens[3].tt, token_type._6)
+        self.assertEqual(tokens[2].lexeme, 'd')
+        self.assertEqual(tokens[3].tt, token_type.ROW)
+        self.assertEqual(tokens[3].lexeme, '6')
         self.assertEqual(tokens[4].tt, token_type.EN_PASSANT)
 
 
@@ -69,9 +79,12 @@ class SANScannerTest(unittest.TestCase):
         tokens = self.scan("0-0-0 Re8")
 
         self.assertEqual(tokens[0].tt, token_type.CASTLE_QUEENS_SIDE)
-        self.assertEqual(tokens[1].tt, token_type.ROOK)
-        self.assertEqual(tokens[2].tt, token_type.E)
-        self.assertEqual(tokens[3].tt, token_type._8)
+        self.assertEqual(tokens[1].tt, token_type.PIECE_TYPE)
+        self.assertEqual(tokens[1].lexeme, 'R')
+        self.assertEqual(tokens[2].tt, token_type.COL)
+        self.assertEqual(tokens[2].lexeme, 'e')
+        self.assertEqual(tokens[3].tt, token_type.ROW)
+        self.assertEqual(tokens[3].lexeme, '8')
         self.assertEqual(tokens[4].tt, token_type.EOF)
 
 

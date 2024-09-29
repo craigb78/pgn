@@ -1,7 +1,7 @@
 from pgn.expr import *
-from parser import Parser
-from error_log import ErrorLog
-import token_type
+from pgn.parser import Parser
+from pgn.error_log import ErrorLog
+import pgn.token_type as token_type
 
 class PGNParser:
 
@@ -9,7 +9,7 @@ class PGNParser:
         self.__parser = Parser(tokens)
         self.__errors = ErrorLog()
 
-    def parse(self) -> Expr:
+    def parse(self) -> PGNDatabase:
         return self.pgn_database()
 
     def pgn_database(self) -> PGNDatabase:
@@ -52,6 +52,7 @@ class PGNParser:
                                            token_type.RESULT_DRAW,
                                            token_type.RESULT_WHITE_WIN,
                                            token_type.RESULT_BLACK_WIN):
+            print(f"added result: {self.__parser.previous()}")
             return PGNGameResult(self.__parser.previous())
         return None
 
@@ -79,7 +80,7 @@ class PGNParser:
 
     def move(self) -> Element:
         if not self.__parser.match(token_type.INTEGER):
-            self.__errors.add_error(f"move() expected type INTEGER but got: {self.__parser.peek()}")
+           # self.__errors.add_error(f"move() expected type INTEGER but got: {self.__parser.peek()}")
             return None
 
         move_number = self.__parser.previous()

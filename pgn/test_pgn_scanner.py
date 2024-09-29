@@ -34,10 +34,11 @@ class PGNScannerTestCase(unittest.TestCase):
             self.fail("Scanner found errors")
 
         parser = PGNParser(scanner.tokens())
-        ast = parser.parse()
+        pgn_database = parser.parse()
         if parser.has_errors():
             parser.print_errors()
             self.fail("Parser found errors")
+
 
 
 if __name__ == '__main__':

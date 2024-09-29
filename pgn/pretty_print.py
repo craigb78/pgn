@@ -1,5 +1,5 @@
-from piece_colours import *
-from piece_type import *
+from pgn.piece_colours import *
+from pgn.piece_type import *
 """
     unicode chess piece characters
 """

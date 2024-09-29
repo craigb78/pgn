@@ -1,6 +1,5 @@
 import unittest
-from pgn_board import *
-import bit_utils
+from pgn.pgn_board import *
 
 class TestBoard(unittest.TestCase):
 
@@ -8,24 +7,24 @@ class TestBoard(unittest.TestCase):
         b = PGNBoard()  # board with default starting positions
 
         # up one
-        pawn_moves = b.can_move_to(PAWN, WHITE, C3)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, C3)
         self.assertEqual(pawn_moves, C2)
 
         # up two
-        pawn_moves = b.can_move_to(PAWN, WHITE, C4)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, C4)
         self.assertEqual(pawn_moves, C2)
 
         # taking to left
-        pawn_moves = b.can_move_to(PAWN, WHITE, dest_square=B3, origin_col=COL_C, capture=True)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=B3, origin_col=COL_C, capture=True)
         self.assertEqual(pawn_moves, C2)
 
         # taking to right
-        pawn_moves = b.can_move_to(PAWN, WHITE, dest_square=D3, origin_col=COL_C, capture=True)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=D3, origin_col=COL_C, capture=True)
         self.assertEqual(pawn_moves, C2)
 
     def test_can_move_knight(self):
         b = PGNBoard() # board with default starting positions
-        knight_moves = b.can_move_to(KNIGHT, WHITE, C3)
+        knight_moves = b.determine_origin_sq(KNIGHT, WHITE, C3)
         self.assertEqual(knight_moves, B1)
 
     def test_can_move_rook(self):
@@ -33,28 +32,28 @@ class TestBoard(unittest.TestCase):
 
         try:
             # ROOK A1 and Rook H8 cannot move to E5.
-            b.can_move_to(ROOK, WHITE, E5)
+            b.determine_origin_sq(ROOK, WHITE, E5)
         except:
             pass  # expected exception
 
-        a1_rook_moves = b.can_move_to(ROOK, WHITE, A8)
+        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, A8)
         self.assertEqual(a1_rook_moves, A1)
 
         # A1 and H8 can both move to D1, so need to supply rank or file of source
-        a1_rook_moves = b.can_move_to(ROOK, WHITE, D1, origin_row=COL_A)
+        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, D1, origin_row=COL_A)
         self.assertEqual(a1_rook_moves, A1)
 
-        a1_rook_moves = b.can_move_to(ROOK, WHITE, D1, origin_square=A1)
+        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, D1, origin_square=A1)
         self.assertEqual(a1_rook_moves, A1)
 
         try:
-            b.can_move_to(ROOK, WHITE, D1, origin_col=ROW_1)
+            b.determine_origin_sq(ROOK, WHITE, D1, origin_col=ROW_1)
             self.fail("Expected 2 possible source pieces A1 and H8")
         except ValueError:
             pass  # expected exception
 
         try:
-            b.can_move_to(ROOK, WHITE, D1)
+            b.determine_origin_sq(ROOK, WHITE, D1)
             self.fail("Expected 2 possible source pieces A1 and H8")
         except ValueError:
             pass  # expected exception
@@ -62,22 +61,22 @@ class TestBoard(unittest.TestCase):
     def test_can_move_bishop(self):
         b = PGNBoard()  # board with default starting positions
 
-        a1_rook_moves = b.can_move_to(BISHOP, WHITE, A3)
+        a1_rook_moves = b.determine_origin_sq(BISHOP, WHITE, A3)
         self.assertEqual(a1_rook_moves, C1)
 
-        a1_rook_moves = b.can_move_to(BISHOP, WHITE, F4)
+        a1_rook_moves = b.determine_origin_sq(BISHOP, WHITE, F4)
         self.assertEqual(a1_rook_moves, C1)
 
     def test_can_move_queen(self):
         b = PGNBoard()  # board with default starting positions
 
-        a1_queen_moves = b.can_move_to(QUEEN, WHITE, H5)
+        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, H5)
         self.assertEqual(a1_queen_moves, D1)
 
-        a1_queen_moves = b.can_move_to(QUEEN, WHITE, H1)
+        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, H1)
         self.assertEqual(a1_queen_moves, D1)
 
-        a1_queen_moves = b.can_move_to(QUEEN, WHITE, D8)
+        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, D8)
         self.assertEqual(a1_queen_moves, D1)
 
     def test_can_move_king(self):
@@ -85,7 +84,7 @@ class TestBoard(unittest.TestCase):
         print(b)
         possible_dest_sq = [D1, D2, E2, F2, F1]
         for dest_sq in possible_dest_sq:
-            a1_king_moves = b.can_move_to(KING, WHITE, dest_sq)
+            a1_king_moves = b.determine_origin_sq(KING, WHITE, dest_sq)
             self.assertEqual(a1_king_moves, E1, f"King should be able to move from E1 to {square_to_str(dest_sq)}")
 
     def test_pawn_moves_white(self):

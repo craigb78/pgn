@@ -3,13 +3,13 @@
 http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#:~:text=PGN%20is%20%22Portable%20Game%20Notation,and%20generation%20by%20computer%20programs.
 
 """
-
-import token_type
+from typing import Sequence
+import pgn.token_type as token_type
 from pgn.pgn_token import Token
 class Scanner:
     """ scanner for PGN files """
     def __init__(self, source):
-        self.__source: str = source
+        self.__source: Sequence = source
         self.__tokens = []
         self.__start: int = 0
         self.__current: int = 0 # index of current char
@@ -81,9 +81,9 @@ class Scanner:
 
         return self.__source[self.__current]
 
-    def add_token(self, token_type):
+    def add_token(self, a_token):
         text = self.__source[self.__start: self.__current]
-        self.__tokens.append(Token(token_type, text, self.__line))
+        self.__tokens.append(Token(a_token, text, self.__line))
 
     def increment_line(self):
         self.__line = self.__line + 1

@@ -1,5 +1,4 @@
-import pgn_logging
-import bit_utils
+import pgn.bit_utils as bit_utils
 
 A8 = 2**63
 B8 = 2**62
@@ -156,14 +155,14 @@ ALL_DIAGONALS = (
 
 def square_to_str(bitmap):
     bitmap_str = {
-        A1: "A1", A2: "A2", A3: "A3", A4: "A4", A5: "A5", A6: "A6", A7: "A7", A8: "A8",
-        B1: "B1", B2: "B2", B3: "B3", B4: "B4", B5: "B5", B6: "B6", B7: "B7", B8: "B8",
-        C1: "C1", C2: "C2", C3: "C3", C4: "C4", C5: "C5", C6: "C6", C7: "C7", C8: "C8",
-        D1: "D1", D2: "D2", D3: "D3", D4: "D4", D5: "D5", D6: "D6", D7: "D7", D8: "D8",
-        E1: "E1", E2: "E2", E3: "E3", E4: "E4", E5: "E5", E6: "E6", E7: "E7", E8: "E8",
-        F1: "F1", F2: "F2", F3: "F3", F4: "F4", F5: "F5", F6: "F6", F7: "F7", F8: "F8",
-        G1: "G1", G2: "G2", G3: "G3", G4: "G4", G5: "G5", G6: "G6", G7: "G7", G8: "G8",
-        H1: "H1", H2: "H2", H3: "H3", H4: "H4", H5: "H5", H6: "H6", H7: "H7", H8: "H8"
+        A1: "a1", A2: "a2", A3: "a3", A4: "a4", A5: "a5", A6: "a6", A7: "a7", A8: "a8",
+        B1: "b1", B2: "b2", B3: "b3", B4: "b4", B5: "b5", B6: "b6", B7: "b7", B8: "b8",
+        C1: "c1", C2: "c2", C3: "c3", C4: "c4", C5: "c5", C6: "c6", C7: "c7", C8: "c8",
+        D1: "d1", D2: "d2", D3: "d3", D4: "d4", D5: "d5", D6: "d6", D7: "d7", D8: "d8",
+        E1: "e1", E2: "e2", E3: "e3", E4: "e4", E5: "e5", E6: "e6", E7: "e7", E8: "e8",
+        F1: "f1", F2: "f2", F3: "f3", F4: "f4", F5: "f5", F6: "f6", F7: "f7", F8: "f8",
+        G1: "g1", G2: "g2", G3: "g3", G4: "g4", G5: "g5", G6: "g6", G7: "g7", G8: "g8",
+        H1: "h1", H2: "h2", H3: "h3", H4: "h4", H5: "h5", H6: "h6", H7: "h7", H8: "h8"
     }
 
     matches = ""
@@ -201,9 +200,53 @@ def find_col(origin_sq):
 def find_diagonal(origin_sq):
     matching = 0
     for diagonal in ALL_DIAGONALS:
-        pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/next diagonal/{square_to_str(diagonal)}")
+      #  pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/next diagonal/{square_to_str(diagonal)}")
         if bit_utils.is_mask_set(diagonal, origin_sq):
-            pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/adding diagonal/{square_to_str(diagonal)}")
+            #pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/adding diagonal/{square_to_str(diagonal)}")
             matching |= diagonal
-    pgn_logging.logger.debug(f"find_diagonal()/result/{square_to_str(matching)}")
+   # pgn_logging.logger.debug(f"find_diagonal()/result/{square_to_str(matching)}")
     return matching
+
+
+def str_to_row(ch) -> int:
+    if ch == '1':
+        return ROW_1
+    if ch == '2':
+        return ROW_2
+    if ch == '3':
+        return ROW_3
+    if ch == '4':
+        return ROW_4
+    if ch == '5':
+        return ROW_5
+    if ch == '6':
+        return ROW_6
+    if ch == '7':
+        return ROW_7
+    if ch == '8':
+        return ROW_8
+
+    raise ValueError(f"no match for 'row'={ch}")
+
+
+def str_to_col(ch) -> int:
+    ch = ch.lower()
+    if ch == 'a':
+        return COL_A
+    if ch == 'b':
+        return COL_B
+    if ch == 'c':
+        return COL_C
+    if ch == 'd':
+        return COL_D
+    if ch == 'e':
+        return COL_E
+    if ch == 'f':
+        return COL_F
+    if ch == 'g':
+        return COL_G
+    if ch == 'h':
+        return COL_H
+
+    raise ValueError(f"no match for 'col'={ch}")
+

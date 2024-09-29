@@ -1,8 +1,12 @@
-from pgn_squares import *
-from piece_type import *
-from piece_colours import *
-import pretty_print
-from pgn_logging import logger
+import logging
+
+from pgn.pgn_squares import *
+from pgn.piece_type import *
+from pgn.piece_colours import *
+import pgn.pretty_print as pretty_print
+from pgn.pgn_logging import logger
+import pgn.bit_utils as bit_utils
+from pgn_move import PGNPly
 
 class PGNBoard:
 
@@ -165,18 +169,18 @@ class PGNBoard:
 
     def __replace(self, bitmap, origin_sq, dest_sq):
         """ move the piece from the origin sq to the dest sq"""
-        bit_utils.print_bitmap("bitmap", bitmap)
-        bit_utils.print_bitmap("origin_sq", origin_sq)
-        bit_utils.print_bitmap("dest_sq", dest_sq)
+        #bit_utils.print_bitmap("bitmap", bitmap)
+        #bit_utils.print_bitmap("origin_sq", origin_sq)
+        #bit_utils.print_bitmap("dest_sq", dest_sq)
 
         if not bit_utils.is_mask_set(bitmap, origin_sq):
             raise ValueError("piece is not on origin sq")
 
         bitmap = bit_utils.clear_mask(bitmap, origin_sq)
-        bit_utils.print_bitmap("bitmap after clearing", bitmap)
+        #bit_utils.print_bitmap("bitmap after clearing", bitmap)
 
         bitmap = bit_utils.set_mask(bitmap, dest_sq)
-        bit_utils.print_bitmap("bitmap after set mask", bitmap)
+        #bit_utils.print_bitmap("bitmap after set mask", bitmap)
 
         return bitmap
 
@@ -199,6 +203,43 @@ class PGNBoard:
 
         board_str += " |\tA\t|\tB\t|\tC\t|\tD\t|\tE\t|\tF\t|\tG\t|\tH\t|\n"
         return board_str.rstrip() # rstrip to remove trailing \n
+
+    def do_castle(self, castle_kings_side=False, castle_queens_side=False, colour=WHITE):
+        rook_origin_sq = 0
+        rook_dest_sq = 0
+
+        king_origin_sq = 0
+        king_dest_sq = 0
+
+        if colour == WHITE:
+            king_origin_sq = E1
+            if castle_kings_side:
+                king_dest_sq = G1
+                rook_origin_sq = H1
+                rook_dest_sq = F1
+            elif castle_queens_side:
+                king_dest_sq = C1
+                rook_origin_sq = A1
+                rook_dest_sq = D1
+        elif colour == BLACK:
+            king_origin_sq = E8
+            if castle_kings_side:
+                king_dest_sq = G8
+                rook_origin_sq = H8
+                rook_dest_sq = F8
+            elif castle_queens_side:
+                king_dest_sq = D8
+                rook_origin_sq = A8
+                rook_dest_sq = C8
+        else:
+            raise ValueError("castling expected")
+
+        # could do some validation here eg (does the king exist on the expected sq? does the rook exist on the expected sq?)
+        # but we can assume the PGN file is correct
+
+        # swap the king and the rook
+        self.make_move(KING, colour, king_origin_sq, king_dest_sq)
+        self.make_move(ROOK, colour, rook_origin_sq, rook_dest_sq)
 
     def inbounds(self, dest_sq): # make sure we are not going off the board
         if H1 <= dest_sq <= A8:
@@ -248,8 +289,8 @@ class PGNBoard:
         logger.debug(f"generate_bishop_moves diagonals for {square_to_str(origin_sq)} are {square_to_str(diag)}")
         return diag
 
-    def generate_king_moves(self, origin_square):
-        possible_dest_squares = 0
+    def generate_king_moves(self, origin_square) -> int:
+        possible_dest_squares: int = 0
 
         #   UP
         possible_dest_squares |= self.inbounds(origin_square << 8)
@@ -278,8 +319,8 @@ class PGNBoard:
     def generate_queen_moves(self, origin_sq):
         return self.generate_bishop_moves(origin_sq) | self.generate_rook_moves(origin_sq)
 
-    def generate_pawn_moves(self, colour, origin_square, capture):
-        possible_dest_squares = 0
+    def generate_pawn_moves(self, colour, origin_square, capture) -> int:
+        possible_dest_squares: int = 0
 
         if colour == WHITE:
             if capture:
@@ -310,7 +351,7 @@ class PGNBoard:
                 # TODO black en passant???
         return possible_dest_squares
 
-    def generate_moves(self, piece_type, colour, origin_sq, capture:bool=False):
+    def generate_moves(self, piece_type, colour, origin_sq, capture:bool=False) -> int:
         if piece_type == KNIGHT:
             return self.generate_knight_moves(origin_sq)
         elif piece_type == ROOK:
@@ -326,7 +367,14 @@ class PGNBoard:
         else:
             raise ValueError(f"unknown piece type: {piece_type}")
 
-    def can_move_to(self, piece_type, colour, dest_square, origin_square=0, origin_row=0, origin_col=0, capture=False):
+    def determine_origin_sq(self, piece_type,
+                            colour,
+                            dest_square,
+                            origin_square=0,
+                            origin_row=0,
+                            origin_col=0,
+                            capture=False) -> [int]:
+
         """
             given a dest square (bitmask E5 etc)
             determine the starting square (bitmask A1 etc)
@@ -380,3 +428,28 @@ class PGNBoard:
                 # We assume the PGN files are valid, and that the move is legal
                 # This sq is therefore the starting square for the move
                 return moveable_pieces_of_type_and_colour
+
+    def play(self, ply: PGNPly) -> None:
+        logging.info(f"board playing ply: {ply}")
+
+        # castling is a special case
+        if ply.castle_kings_side or ply.castle_queens_side:
+            self.do_castle(ply.castle_kings_side, ply.castle_queens_side, ply.colour)
+        else:
+            # get the origin square
+            origin_sq = self.determine_origin_sq(ply.piece_type,
+                                                  ply.colour,
+                                                  ply.dest_sq,
+                                                  ply.origin_sq,
+                                                  ply.origin_row,
+                                                  ply.origin_col,
+                                                  ply.capture)
+
+            # update the move object with the origin
+            ply.origin_sq = origin_sq
+
+            # then make the move
+            self.make_move(ply.piece_type,
+                            ply.colour,
+                            origin_sq,
+                            ply.dest_sq)

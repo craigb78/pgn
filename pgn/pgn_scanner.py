@@ -1,7 +1,7 @@
 import re
-import token_type
-from scanner import Scanner
-from error_log import ErrorLog
+from pgn.scanner import Scanner
+from pgn.error_log import ErrorLog
+import pgn.token_type as token_type
 
 
 class PGNScanner:
@@ -19,7 +19,6 @@ class PGNScanner:
                 self.__scanner.add_token(token_type.LEFT_BRACKET)
             case "]":
                 self.__scanner.add_token(token_type.RIGHT_BRACKET)
-
             case "{":
                 self.__scanner.add_token(token_type.LEFT_BRACE_COMMENT)
             case "}":
@@ -61,8 +60,9 @@ class PGNScanner:
             # otherwise, it's a symbol
             self.__scanner.add_token(token_type.SYMBOL)
 
-    def __is_symbol(self, ch):
-        return ch in r'[a-zA-Z0-9_+#=:/-]'
+    def __is_symbol(self, ch) -> bool:
+        m = re.match(r'[a-zA-Z0-9_+#=:/-]', ch)
+        return m is not None
 
     def __is_string_prefix(self, ch):
         return ch == r'"'
@@ -89,8 +89,9 @@ class PGNScanner:
         self.__scanner.add_token(token_type.STRING)
 
     @staticmethod
-    def __is_whitespace(ch):
-        return re.match("[ \r\t]", ch)
+    def __is_whitespace(ch) -> bool:
+        match = re.match("[ \r\t]", ch)
+        return match is not None
 
     def print_tokens(self):
         self.__scanner.print_tokens()

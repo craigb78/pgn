@@ -31,7 +31,7 @@ DRAWN_GAME: '1/2-1/2';
 """
 
 from pgn.expr import *
-import token_type
+import pgn.token_type as token_type
 
 class Parser:
 
