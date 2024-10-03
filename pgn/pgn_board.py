@@ -1,4 +1,4 @@
-import logging
+import copy
 
 from pgn.pgn_squares import *
 from pgn.piece_type import *
@@ -57,81 +57,96 @@ class PGNBoard:
         | self.__white_queen
         | self.__white_king)
 
+    def all_pieces(self):
+        return self.black_pieces() | self.white_pieces()
+
     def get_piece(self, sq) -> (int, int,):
+
         if bit_utils.is_mask_set(self.__white_pawn, sq):
             return (WHITE, PAWN,)
-        elif bit_utils.is_mask_set(self.__white_rook, sq):
+        if bit_utils.is_mask_set(self.__white_rook, sq):
             return (WHITE, ROOK, )
-        elif bit_utils.is_mask_set(self.__white_knight, sq):
+        if bit_utils.is_mask_set(self.__white_knight, sq):
             return WHITE, KNIGHT,
-        elif bit_utils.is_mask_set(self.__white_bishop, sq):
+        if bit_utils.is_mask_set(self.__white_bishop, sq):
             return (WHITE, BISHOP,)
-        elif bit_utils.is_mask_set(self.__white_queen, sq):
+        if bit_utils.is_mask_set(self.__white_queen, sq):
             return (WHITE, QUEEN,)
-        elif bit_utils.is_mask_set(self.__white_king, sq):
+        if bit_utils.is_mask_set(self.__white_king, sq):
             return (WHITE, KING,)
-        elif bit_utils.is_mask_set(self.__black_pawn, sq):
+        if bit_utils.is_mask_set(self.__black_pawn, sq):
             return (BLACK, PAWN,)
-        elif bit_utils.is_mask_set(self.__black_rook, sq):
+        if bit_utils.is_mask_set(self.__black_rook, sq):
             return (BLACK, ROOK,)
-        elif bit_utils.is_mask_set(self.__black_knight, sq):
+        if bit_utils.is_mask_set(self.__black_knight, sq):
             return (BLACK, KNIGHT, )
-        elif bit_utils.is_mask_set(self.__black_bishop, sq):
+        if bit_utils.is_mask_set(self.__black_bishop, sq):
             return (BLACK, BISHOP,)
-        elif bit_utils.is_mask_set(self.__black_queen, sq):
+        if bit_utils.is_mask_set(self.__black_queen, sq):
             return (BLACK, QUEEN,)
-        elif bit_utils.is_mask_set(self.__black_king, sq):
+        if bit_utils.is_mask_set(self.__black_king, sq):
             return (BLACK, KING,)
 
-        return (-1, -1)
+        return (0, 0) # there is nothing on the square
 
     def make_move(self, piece_type, colour, origin_sq, destination_sq):
         actual_colour, actual_piece_type = self.get_piece(origin_sq)
 
         if actual_colour != colour:
-            raise ValueError("piece on origin sq does not have expected colour")
+            err_msg = f"piece on origin sq {square_to_str(origin_sq)} does not have expected colour {piece_colour_to_str(colour)}"
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         if actual_piece_type != piece_type:
-            raise ValueError("piece on origin sq does not have expected piece type")
-        
+            err_msg = f"piece on origin sq {square_to_str(origin_sq)} does not have expected piece type {piece_type_to_str(piece_type)}"
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+
+        # when taking, clear any other piece on dest square
+        dest_sq_colour, dest_sq_piece_type = self.get_piece(destination_sq)
+        if dest_sq_colour == colour:
+            raise ValueError("expected piece of opposite colour")
+        if dest_sq_colour != 0 and dest_sq_piece_type != 0:
+            logger.debug(f"taking {piece_colour_to_str(dest_sq_colour)} {piece_type_to_str(dest_sq_piece_type)} on {square_to_str(destination_sq)}")
+            bitmap = self.__get_bitmap(dest_sq_piece_type, dest_sq_colour)
+            bitmap = bit_utils.clear_mask(bitmap, destination_sq)
+            self.__set_bitmap(dest_sq_piece_type, dest_sq_colour, bitmap)
+
+        # move the piece from the origin sq to the new dest dsq
         bitmap = self.__get_bitmap(piece_type, colour)
         updated_bitmap = self.__replace(bitmap, origin_sq, destination_sq)
         self.__set_bitmap(piece_type, colour, updated_bitmap)
         
     def __get_bitmap(self, piece_type, colour):
-        if colour == WHITE:
-            if piece_type == PAWN:
-                return self.__white_pawn
-            elif piece_type == ROOK:
-                return self.__white_rook
-            elif piece_type == KNIGHT:
-                return self.__white_knight
-            elif piece_type == BISHOP:
-                return self.__white_bishop
-            elif piece_type == QUEEN:
-                return self.__white_queen
-            elif piece_type == KING:
-                return self.__white_king
-            else:
-                raise ValueError(f"unknown white piece_type: {piece_type}")
-        elif colour == BLACK:
-            if piece_type == PAWN:
-                return self.__black_pawn
-            elif piece_type == ROOK:
-                return self.__black_rook
-            elif piece_type == KNIGHT:
-                return self.__black_knight
-            elif piece_type == BISHOP:
-                return self.__black_bishop
-            elif piece_type == QUEEN:
-                return self.__black_queen
-            elif piece_type == KING:
-                return self.__black_king
-            else:
-                raise ValueError(f"unknown black piece_type: {piece_type}")
-        else:
-            raise ValueError(f"unknown colour: {colour}")
+        b = 0
+        if bit_utils.is_mask_set(colour, WHITE):
+            if bit_utils.is_mask_set(piece_type, PAWN):
+                b = bit_utils.set_mask(b, self.__white_pawn)
+            if bit_utils.is_mask_set(piece_type, ROOK):
+                b = bit_utils.set_mask(b, self.__white_rook)
+            if bit_utils.is_mask_set(piece_type, KNIGHT):
+                b = bit_utils.set_mask(b, self.__white_knight)
+            if bit_utils.is_mask_set(piece_type,  BISHOP):
+                b = bit_utils.set_mask(b, self.__white_bishop)
+            if bit_utils.is_mask_set(piece_type, QUEEN):
+                b = bit_utils.set_mask(b, self.__white_queen)
+            if bit_utils.is_mask_set(piece_type, KING):
+                b = bit_utils.set_mask(b, self.__white_king)
 
-        return None
+        if bit_utils.is_mask_set(colour, BLACK):
+            if bit_utils.is_mask_set(piece_type, PAWN):
+                b = bit_utils.set_mask(b, self.__black_pawn)
+            if bit_utils.is_mask_set(piece_type, ROOK):
+                b = bit_utils.set_mask(b, self.__black_rook)
+            if bit_utils.is_mask_set(piece_type, KNIGHT):
+                b = bit_utils.set_mask(b, self.__black_knight)
+            if bit_utils.is_mask_set(piece_type,  BISHOP):
+                b = bit_utils.set_mask(b, self.__black_bishop)
+            if bit_utils.is_mask_set(piece_type, QUEEN):
+                b = bit_utils.set_mask(b, self.__black_queen)
+            if bit_utils.is_mask_set(piece_type, KING):
+                b = bit_utils.set_mask(b, self.__black_king)
+
+        return b
 
     def __set_bitmap(self, piece_type, colour, bitmask):
         if colour == WHITE:
@@ -177,7 +192,7 @@ class PGNBoard:
             raise ValueError("piece is not on origin sq")
 
         bitmap = bit_utils.clear_mask(bitmap, origin_sq)
-        #bit_utils.print_bitmap("bitmap after clearing", bitmap)
+        #bit_utils.print_bitmap("bitmap after clearing", bitmap
 
         bitmap = bit_utils.set_mask(bitmap, dest_sq)
         #bit_utils.print_bitmap("bitmap after set mask", bitmap)
@@ -228,9 +243,9 @@ class PGNBoard:
                 rook_origin_sq = H8
                 rook_dest_sq = F8
             elif castle_queens_side:
-                king_dest_sq = D8
+                king_dest_sq = C8
                 rook_origin_sq = A8
-                rook_dest_sq = C8
+                rook_dest_sq = D8
         else:
             raise ValueError("castling expected")
 
@@ -252,7 +267,7 @@ class PGNBoard:
         generate moves that can be made with a knight
         The constants are determined by the relative bitmasks of the squares
         """
-        possible_dest_squares = 0
+        possible_dest_squares: int = 0
 
         #   up to right
         possible_dest_squares |= self.inbounds(origin_square << 15)
@@ -271,23 +286,69 @@ class PGNBoard:
         # right and down
         possible_dest_squares |= self.inbounds(origin_square >> 10)
 
+        logger.debug(f"generate_knight_moves col for {square_to_str(origin_square)} are {square_to_str(possible_dest_squares)}")
+
         return possible_dest_squares
 
-    def generate_rook_moves(self, origin_sq):
+    def is_clear_run(self, piece_type: int, origin_sq: int, dest_sq: int, possible_dest_sqs: int) -> bool:
+        if piece_type in (KNIGHT, KING):
+            # Knights jump over pieces in the way
+            # kings only move 1 place, so there is nothing between their origin and dest
+            return
+
+        # there are no pieces on any of the possible destination squares (ie the path between origin_sq and dest_sq)
+        #possible_dest_sqs = bit_utils.clear_mask(possible_dest_sqs, origin_sq)
+        #possible_dest_sqs = bit_utils.clear_mask(possible_dest_sqs, dest_sq)
+        #possible_dest_sqs = self.all_pieces()
+        #clear_run = bit_utils.is_clear_run(possible_dest_sqs, origin_sq, dest_sq)
+
+        # the sqs from origin to dest excluding the end points
+        path_mask = bit_utils.create_mask_exclusive(origin_sq, dest_sq)
+        clear_run = (path_mask & possible_dest_sqs & self.all_pieces()) == 0
+        #logger.info(
+          #  f"is_clear_run({square_to_str(origin_sq)} to {square_to_str(dest_sq)})/possible_dest_sqs={square_to_str(possible_dest_sqs)},clear_run={clear_run}")
+        return clear_run
+
+    def generate_rook_moves(self, origin_sq, dest_sq):
+        # the rook can move along the row it's on and the along the column it's on
         row = find_row(origin_sq)
         col = find_col(origin_sq)
 
-        logger.debug(f"generate_rook_moves col for {square_to_str(origin_sq)} are {square_to_str(col)}")
-        logger.debug(f"generate_rook_moves row for {square_to_str(origin_sq)} are {square_to_str(row)}")
+       # logger.debug(f"generate_rook_moves col for {square_to_str(origin_sq)} are {square_to_str(col)}")
+       # logger.debug(f"generate_rook_moves row for {square_to_str(origin_sq)} are {square_to_str(row)}")
 
-        # clear the origin sq the piece is on since we cannot "move" to the current sq.
-        return bit_utils.clear_mask(row | col, origin_sq)
+        moves = 0
+        if self.is_clear_run(ROOK, origin_sq, dest_sq, row):
+            # restrict diagonals to start and end points
+            moves |= bit_utils.create_mask_inclusive(origin_sq, dest_sq) & row
 
-    def generate_bishop_moves(self, origin_sq):
-        diag = find_diagonal(origin_sq) # there should be 1 or 2 diagonals
-        diag = bit_utils.clear_mask(diag, origin_sq)
-        logger.debug(f"generate_bishop_moves diagonals for {square_to_str(origin_sq)} are {square_to_str(diag)}")
-        return diag
+        if self.is_clear_run(ROOK, origin_sq, dest_sq, col):
+            # restrict diagonals to start and end points
+            moves |= bit_utils.create_mask_inclusive(origin_sq, dest_sq) & col
+
+       # logger.debug(f"generate_rook_moves for {square_to_str(origin_sq)} to {square_to_str(dest_sq)} are {square_to_str(moves)}")
+
+        return moves
+
+    def generate_bishop_moves(self, origin_sq, dest_sq):
+        # the bishop can move along the diagonals it's on
+        # there should be 1 or 2 diagonals
+        #diagonals: [int] = [bit_utils.clear_mask(d, origin_sq) for d in find_diagonal(origin_sq)]
+
+        # clear the squares beyond the origin and dest since we are not interested in them
+        #diagonals = [bit_utils.clear_lower(d, dest_square, clear_endpoint=True) for d in diagonals]
+        #diagonals = [bit_utils.clear_upper(d, origin_sq, clear_endpoint=True) for d in diagonals]
+
+        # remove the diagonal from the list if there is no clear run
+        #diagonals = [d for d in diagonals if self.is_clear_run(piece_type, dest_square, d)]
+        diagonals = 0
+        for next_diagonal in find_diagonal(origin_sq):
+            if self.is_clear_run(BISHOP, origin_sq, dest_sq, next_diagonal):
+                # restrict the diagonal to the start and end points
+                diagonals |= bit_utils.create_mask_inclusive(origin_sq, dest_sq) & next_diagonal
+              #  logger.debug(
+                #    f"generate_bishop_moves diagonals for {square_to_str(origin_sq)} are {square_to_str(diagonals)}")
+        return diagonals
 
     def generate_king_moves(self, origin_square) -> int:
         possible_dest_squares: int = 0
@@ -305,67 +366,77 @@ class PGNBoard:
         # DIAGONAL DOWN RIGHT
         possible_dest_squares |= self.inbounds(origin_square >> 9)
         # LEFT
-        logger.debug(f"generate_king_moves({square_to_str(origin_square)})/LEFT/before={square_to_str(possible_dest_squares)}")
         possible_dest_squares |= self.inbounds(origin_square << 1)
-        logger.debug(f"generate_king_moves({square_to_str(origin_square)})/LEFT/after={square_to_str(possible_dest_squares)}")
-        logger.debug(f"generate_king_moves({square_to_str(origin_square)})/LEFT/origin_square<<1={square_to_str(origin_square << 1)}")
         # RIGHT
         possible_dest_squares |= self.inbounds(origin_square >> 1)
 
-        logger.debug(f'generate_king_moves({square_to_str(origin_square)})/possible_dest_squares={square_to_str(possible_dest_squares)}')
-
         return possible_dest_squares
 
-    def generate_queen_moves(self, origin_sq):
-        return self.generate_bishop_moves(origin_sq) | self.generate_rook_moves(origin_sq)
+    def generate_queen_moves(self, origin_sq, dest_sq):
+        return self.generate_bishop_moves(origin_sq, dest_sq) | self.generate_rook_moves(origin_sq, dest_sq)
 
     def generate_pawn_moves(self, colour, origin_square, capture) -> int:
         possible_dest_squares: int = 0
 
         if colour == WHITE:
-            if capture:
+            # UP one place
+            possible_dest_squares |= self.inbounds(origin_square << 8)
+            if find_row(origin_square) == ROW_2:
+                # UP two places
+                possible_dest_squares |= self.inbounds(origin_square << 16)
+
+            # TODO white en passant???
+
+            if capture or possible_dest_squares == 0:  # some pgn games don't indicate pawn captures with the x
                 # DIAGONAL UP LEFT
                 possible_dest_squares |= self.inbounds(origin_square << 9)
                 # DIAGONAL UP RIGHT
                 possible_dest_squares |= self.inbounds(origin_square << 7)
-            else:
-                # UP one place
-                possible_dest_squares |= self.inbounds(origin_square << 8)
-                if find_row(origin_square) == ROW_2:
-                    # UP two places
-                    possible_dest_squares |= self.inbounds(origin_square << 16)
-
-            # TODO white en passant???
         else:
-            if capture:
+            # DOWN one place
+            possible_dest_squares |= self.inbounds(origin_square >> 8)
+            if find_row(origin_square) == ROW_7:
+                # DOWN TWO PLACES
+                possible_dest_squares |= self.inbounds(origin_square >> 16)
+
+            # TODO black en passant???
+
+            if capture or possible_dest_squares == 0: # some pgn games don't indicate pawn captures with the x
                 # DIAGONAL DOWN LEFT
                 possible_dest_squares |= self.inbounds(origin_square >> 7)
                 # DIAGONAL DOWN RIGHT
                 possible_dest_squares |= self.inbounds(origin_square >> 9)
-            else:
-                # DOWN one place
-                possible_dest_squares |= self.inbounds(origin_square >> 8)
-                if find_row(origin_square) == ROW_7:
-                    # DOWN TWO PLACES
-                    possible_dest_squares |= self.inbounds(origin_square >> 16)
-                # TODO black en passant???
+
+        logger.debug(f"generate_pawn_moves()/origin_sq: {square_to_str(origin_square)} possible dest squares: {square_to_str(possible_dest_squares)}")
         return possible_dest_squares
 
-    def generate_moves(self, piece_type, colour, origin_sq, capture:bool=False) -> int:
-        if piece_type == KNIGHT:
-            return self.generate_knight_moves(origin_sq)
-        elif piece_type == ROOK:
-            return self.generate_rook_moves(origin_sq)
-        elif piece_type == BISHOP:
-            return self.generate_bishop_moves(origin_sq)
-        elif piece_type == QUEEN:
-            return self.generate_queen_moves(origin_sq)
-        elif piece_type == KING:
-            return self.generate_king_moves(origin_sq)
-        elif piece_type == PAWN:
-            return self.generate_pawn_moves(colour, origin_sq, capture)
-        else:
-            raise ValueError(f"unknown piece type: {piece_type}")
+    def generate_moves(self, piece_type, colour, origin_sq, dest_sq, capture: bool = False) -> int:
+        """
+        Given an origin square, list the dest sqs that the piece can move to.
+        e.g., for a bishop this is all the squares the lie on the same diagonals as the bishop
+        For a knight, this is all the squares the knight can move to.
+        :param piece_type:
+        :param colour:
+        :param origin_sq:
+        :param capture:
+        :return:
+        """
+
+        moves = 0
+        if bit_utils.is_mask_set(piece_type, KNIGHT):
+            moves |= self.generate_knight_moves(origin_sq)
+        if bit_utils.is_mask_set(piece_type, ROOK):
+            moves |= self.generate_rook_moves(origin_sq, dest_sq)
+        if bit_utils.is_mask_set(piece_type, BISHOP):
+            moves |= self.generate_bishop_moves(origin_sq, dest_sq)
+        if bit_utils.is_mask_set(piece_type, QUEEN):
+            moves |= self.generate_queen_moves(origin_sq, dest_sq)
+        if bit_utils.is_mask_set(piece_type, KING):
+            moves |= self.generate_king_moves(origin_sq)
+        if bit_utils.is_mask_set(piece_type, PAWN):
+            moves |= self.generate_pawn_moves(colour, origin_sq, capture)
+
+        return moves
 
     def determine_origin_sq(self, piece_type,
                             colour,
@@ -374,32 +445,12 @@ class PGNBoard:
                             origin_row=0,
                             origin_col=0,
                             capture=False) -> [int]:
-
         """
             given a dest square (bitmask E5 etc)
             determine the starting square (bitmask A1 etc)
         """
 
-        def test(origin_sq):
-            logger.debug(f"can_move_to()/origin({square_to_str(origin_sq)})")
-            # get all squares the piece can move to
-            possible_dest_sqs = self.generate_moves(piece_type, colour, origin_sq, capture)
-            # if one of the squares is the dest square, then we've found the piece we are looking for
-            if bit_utils.is_mask_set(possible_dest_sqs, dest_square):
-                return origin_sq
-            else:
-                return 0
-
-        #1. do we have a piece of the given colour and type?
-        all_pieces_of_type_and_colour = self.__get_bitmap(piece_type, colour)
-
-        #2. list all the pieces of this colour and type that can move to the destination square
-        moveable_pieces_of_type_and_colour: int = bit_utils.for_each_bit_set(all_pieces_of_type_and_colour, highest_bit=A8, func=test)
-        logger.info("%s %s can move from %s to %s",
-                    piece_type_to_str(piece_type),
-                    piece_colour_to_str(colour),
-                    square_to_str(moveable_pieces_of_type_and_colour),
-                    square_to_str(dest_square))
+        moveable_pieces_of_type_and_colour = self.moveable_to_dest_sq(piece_type, colour, dest_square, capture)
 
         if moveable_pieces_of_type_and_colour == 0:
             # the pgn file indicates a move that we cannot make,
@@ -418,6 +469,16 @@ class PGNBoard:
                 # if we have an origin file to disambiguate...
                 moveable_pieces_of_type_and_colour &= origin_col
 
+            if bit_utils.number_of_bits_set(moveable_pieces_of_type_and_colour, highest_bit=A8) > 1:
+                # discount any move if it puts this colours king in check
+                # (or if still in check after the move)
+                logger.debug(f"about to try_move() for piece_type {piece_type_to_str(piece_type)}"
+                             f",colour={piece_colour_to_str(colour)}"
+                             f",moveable_pieces_of_type_and_colour={square_to_str(moveable_pieces_of_type_and_colour)}"
+                             f",dest_square={square_to_str(dest_square)}")
+                moveable_pieces_of_type_and_colour = PGNBoard.try_move(self, piece_type, colour, moveable_pieces_of_type_and_colour, dest_square)
+
+
             if bit_utils.number_of_bits_set(moveable_pieces_of_type_and_colour, highest_bit=A8) != 1:
                 raise ValueError(f"expected one piece that can move to "
                                  f"destination square {square_to_str(dest_square)} "
@@ -427,10 +488,57 @@ class PGNBoard:
                 # we've found a single piece of the correct type and colour that can move to the destination square.
                 # We assume the PGN files are valid, and that the move is legal
                 # This sq is therefore the starting square for the move
+                logger.info("%s %s MOVING from %s to %s",
+                            piece_type_to_str(piece_type),
+                            piece_colour_to_str(colour),
+                            square_to_str(moveable_pieces_of_type_and_colour),
+                            square_to_str(dest_square))
                 return moveable_pieces_of_type_and_colour
 
+    def moveable_to_dest_sq(self, piece_type, colour, dest_square, capture: bool):
+        """ 
+        get all pieces of the type and colour that can move to the dest square
+        :param colour: 
+        :param dest_square: 
+        :param piece_type: 
+        :return: 
+        """
+        def test(origin_sq) -> int:
+            # get all squares the piece can move to
+            origin_sq_colour, origin_sq_piece_type = self.get_piece(origin_sq)
+            possible_dest_sqs = self.generate_moves(origin_sq_piece_type,
+                                                    origin_sq_colour,
+                                                    origin_sq,
+                                                    dest_square,
+                                                    capture)
+            logger.debug(f"moveable_to_dest_sq()/"
+                         f"piece_type={piece_type_to_str(origin_sq_piece_type)},"
+                         f"colour={piece_colour_to_str(origin_sq_colour)},"
+                         f"origin={square_to_str(origin_sq)},"
+                         f"dest_sq={square_to_str(dest_square)},"
+                         f"possible_dest_sqs={square_to_str(possible_dest_sqs)}")
+
+            # if one of the squares is the dest square,
+            # and (if applicable to piece type) the squares between origin_sq and dest_sq are empty
+            # then we've found the piece we are looking for
+            if bit_utils.is_mask_set(possible_dest_sqs, dest_square):
+                return origin_sq
+            return 0
+
+        # 1. do we have a piece of the given colour and type?
+        all_pieces_of_type_and_colour = self.__get_bitmap(piece_type, colour)
+        # 2. list all the pieces of this colour and type that can move to the destination square
+        moveable_pieces_of_type_and_colour: int = bit_utils.for_each_bit_set(all_pieces_of_type_and_colour,
+                                                                             highest_bit=A8, func=test)
+        logger.info("%s %s can move from %s to %s",
+                    piece_type_to_str(piece_type),
+                    piece_colour_to_str(colour),
+                    square_to_str(moveable_pieces_of_type_and_colour),
+                    square_to_str(dest_square))
+        return moveable_pieces_of_type_and_colour
+
     def play(self, ply: PGNPly) -> None:
-        logging.info(f"board playing ply: {ply}")
+        logger.info(f"---------board playing ply: {ply}--------------")
 
         # castling is a special case
         if ply.castle_kings_side or ply.castle_queens_side:
@@ -453,3 +561,41 @@ class PGNBoard:
                             ply.colour,
                             origin_sq,
                             ply.dest_sq)
+
+    def is_in_check(self, colour) -> bool:
+        """
+        can pieces of the opposite colour "move_to" i.e., check the king?
+        :param colour:
+        :return:
+        """
+        if colour == BLACK:
+            king = self.__black_king
+            checking_piece = self.moveable_to_dest_sq(piece_type=ALL_PIECES_TYPES, colour=WHITE, dest_square=king, capture=True)
+        else:
+            king = self.__white_king
+            checking_piece = self.moveable_to_dest_sq(piece_type=ALL_PIECES_TYPES,
+                                                     colour=BLACK,
+                                                     dest_square=king,
+                                                     capture=True)
+
+        logger.debug(f"is_in_check()/{piece_colour_to_str(colour)},king sq={square_to_str(king)}, checking_piece: {square_to_str(checking_piece)}")
+        return checking_piece != 0
+
+    @staticmethod
+    def try_move(board, piece_type: int, colour: int, moves_to_try: int, dest_sq: int) -> int:
+        """
+        Try each of the supplied moves on the board, and return all that are legal
+        :param moves_to_try:
+        :return:
+        """
+        def in_check(next_move_to_try: int) -> int:
+            # make the move, then determine if colour is in check
+            copied_board = copy.copy(board)
+            copied_board.make_move(piece_type, colour, next_move_to_try, dest_sq)
+            if not copied_board.is_in_check(colour):
+                logger.info(f"try_move()/next_move_to_try {piece_type_to_str(piece_type)} {piece_colour_to_str(colour)} {square_to_str(next_move_to_try)} to {square_to_str(dest_sq)}")
+                return next_move_to_try # then this is a valid move since making it does not put our king in check
+            return 0
+
+        moveable = bit_utils.for_each_bit_set(bitmap=moves_to_try, highest_bit=A8, func=in_check)
+        return moveable

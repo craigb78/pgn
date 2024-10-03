@@ -1,4 +1,4 @@
-
+from pgn_logging import logger
 class ErrorLog:
     def __init__(self):
         self.__errors: (int, str) = []
@@ -11,4 +11,4 @@ class ErrorLog:
 
     def print_errors(self):
         for next_error in self.__errors:
-            print(next_error)
+            logger.error(next_error)

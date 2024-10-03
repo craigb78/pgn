@@ -42,8 +42,8 @@ def main():
         if parser.has_errors():
             parser.print_errors()
 
-        for pgn_game in pgn_database.games:
-            print(pgn_game.tag_section)
+        for j, pgn_game in enumerate(pgn_database.games):
+            logger.info(f"***************GAME {j+1}****************8")
 
             san_parser = SANParser()
             for elem in pgn_game.move_text.element_sequence.elements:
@@ -68,12 +68,12 @@ def main():
 
             # TODO add the event information to the list of PGN moves
             board = PGNBoard()
-            for pgn_move in pgn_moves:
-                print(board)
-
+            for i, pgn_move in enumerate(pgn_moves):
+                logger.info(f"==============GAME {j+1} / MOVE {i+1} ===============")
                 board.play(pgn_move.white_ply)
                 if pgn_move.black_ply:
                     board.play(pgn_move.black_ply)
+                logger.debug(board)
 
         visitor = PrintASTVisitor()
         pgn_database.accept(visitor)

@@ -197,13 +197,13 @@ def find_col(origin_sq):
     return 0
 
 
-def find_diagonal(origin_sq):
-    matching = 0
+def find_diagonal(origin_sq) -> [int]:
+    matching: [int] = []
     for diagonal in ALL_DIAGONALS:
       #  pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/next diagonal/{square_to_str(diagonal)}")
         if bit_utils.is_mask_set(diagonal, origin_sq):
             #pgn_logging.logger.debug(f"find_diagonal({square_to_str(origin_sq)})/adding diagonal/{square_to_str(diagonal)}")
-            matching |= diagonal
+            matching.append(diagonal)
    # pgn_logging.logger.debug(f"find_diagonal()/result/{square_to_str(matching)}")
     return matching
 

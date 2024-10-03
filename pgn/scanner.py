@@ -4,6 +4,7 @@ http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#:~:text=PGN%20is%2
 
 """
 from typing import Sequence
+from pgn_logging import logger
 import pgn.token_type as token_type
 from pgn.pgn_token import Token
 class Scanner:
@@ -20,7 +21,7 @@ class Scanner:
 
     def print_tokens(self):
         for next_token in self.__tokens:
-            print(next_token)
+            logger.debug(next_token)
 
     def at_end(self):
         """ have we consumed all the chars in self.source??"""

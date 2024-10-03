@@ -21,7 +21,7 @@ class PGNPly:
                 f"capture:{self.capture},"
                 f"castle king:{self.castle_kings_side},"
                 f"castle queen:{self.castle_queens_side})"
-                f"origin_sq:{square_to_str(self.dest_sq)}")
+                f"dest_sq:{square_to_str(self.dest_sq)}")
 
 
 """

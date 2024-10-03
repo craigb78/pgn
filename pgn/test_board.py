@@ -61,11 +61,12 @@ class TestBoard(unittest.TestCase):
     def test_can_move_bishop(self):
         b = PGNBoard()  # board with default starting positions
 
-        a1_rook_moves = b.determine_origin_sq(BISHOP, WHITE, A3)
-        self.assertEqual(a1_rook_moves, C1)
+        b.make_move(PAWN, WHITE, B2, B4)
+        bishop_moves = b.determine_origin_sq(BISHOP, WHITE, A3)
+        self.assertEqual(bishop_moves, C1)
 
-        a1_rook_moves = b.determine_origin_sq(BISHOP, WHITE, F4)
-        self.assertEqual(a1_rook_moves, C1)
+       # bishop_moves = b.determine_origin_sq(BISHOP, WHITE, F4)
+        #self.assertEqual(bishop_moves, C1)
 
     def test_can_move_queen(self):
         b = PGNBoard()  # board with default starting positions

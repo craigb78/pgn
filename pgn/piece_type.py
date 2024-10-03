@@ -1,24 +1,32 @@
-KING = 2**0
+import bit_utils
+
 QUEEN = 2**1
-BISHOP= 2**2
-KNIGHT= 2**3
-ROOK= 2**4
-PAWN= 2**5
+BISHOP = 2**2
+KNIGHT = 2**3
+ROOK = 2**4
+PAWN = 2**5
+KING = 2**6
+
+ALL_PIECES_TYPES = KING | QUEEN | BISHOP | KNIGHT | ROOK | PAWN
+
 
 def piece_type_to_str(piece_type):
-    if piece_type == KING:
-        return 'K'
-    if piece_type == QUEEN:
-        return 'Q'
-    if piece_type == BISHOP:
-        return 'B'
-    if piece_type == KNIGHT:
-        return 'N'
-    if piece_type == ROOK:
-        return 'R'
-    if piece_type == PAWN:
-        return 'P'
-    return None
+    piece_type_strs = []
+
+    if bit_utils.is_mask_set(piece_type, KING):
+        piece_type_strs.append('K')
+    if bit_utils.is_mask_set(piece_type, QUEEN):
+        piece_type_strs.append('Q')
+    if bit_utils.is_mask_set(piece_type, BISHOP):
+        piece_type_strs.append('B')
+    if bit_utils.is_mask_set(piece_type, KNIGHT):
+        piece_type_strs.append('N')
+    if bit_utils.is_mask_set(piece_type, ROOK):
+        piece_type_strs.append('R')
+    if bit_utils.is_mask_set(piece_type, PAWN):
+        piece_type_strs.append('P')
+
+    return ",".join(piece_type_strs)
 
 
 def str_to_piece_type(ch):
@@ -34,4 +42,3 @@ def str_to_piece_type(ch):
         return ROOK
     if ch == 'P':
         return PAWN
-
