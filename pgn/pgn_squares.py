@@ -208,6 +208,94 @@ def find_diagonal(origin_sq) -> [int]:
     return matching
 
 
+def col_a(origin_sq) -> bool:
+    return (origin_sq & COL_A) == origin_sq
+
+
+def col_h(origin_sq) -> bool:
+    return (origin_sq & COL_H) == origin_sq
+
+
+def row_1(origin_sq) -> bool:
+    return (origin_sq & ROW_1) == origin_sq
+
+
+def row_2(origin_sq) -> bool:
+    return (origin_sq & ROW_2) == origin_sq
+
+
+def row_3(origin_sq) -> bool:
+    return (origin_sq & ROW_3) == origin_sq
+
+
+def row_4(origin_sq) -> bool:
+    return (origin_sq & ROW_4) == origin_sq
+
+
+def row_5(origin_sq) -> bool:
+    return (origin_sq & ROW_5) == origin_sq
+
+
+def row_6(origin_sq) -> bool:
+    return (origin_sq & ROW_6) == origin_sq
+
+
+def row_7(origin_sq) -> bool:
+    return (origin_sq & ROW_7) == origin_sq
+
+
+def row_8(origin_sq) -> bool:
+    return (origin_sq & ROW_8) == origin_sq
+
+
+def up_one(origin_sq) -> int:
+    return origin_sq << 8
+
+
+def up_two(origin_sq) -> int:
+    return origin_sq << 16
+
+
+def up_left(origin_sq) -> int:
+    return origin_sq << 9
+
+
+def up_right(origin_sq) -> int:
+    return origin_sq << 7
+
+
+def left(origin_sq) -> int:
+    return origin_sq << 1
+
+
+def right(origin_sq) -> int:
+    return origin_sq >> 1
+
+
+def down_one(origin_sq) -> int:
+    return origin_sq >> 8
+
+
+def down_two(origin_sq) -> int:
+    return origin_sq >> 16
+
+
+def down_left(origin_sq) -> int:
+    return origin_sq >> 7
+
+
+def down_right(origin_sq) -> int:
+    return origin_sq >> 9
+
+
+def left_two(origin_sq) -> int:
+    return origin_sq << 2
+
+
+def right_two(origin_sq) -> int:
+    return origin_sq >> 2
+
+
 def str_to_row(ch) -> int:
     if ch == '1':
         return ROW_1

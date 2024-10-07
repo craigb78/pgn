@@ -17,7 +17,7 @@ def is_mask_set(bitmap: int, sq: int):
     return (bitmap & sq) == sq
 
 
-def toggle_mask(bitmap: int, sq: int):
+def toggle_mask(bitmap: int, sq: int) -> int:
     """ where sq is the bitmask (not the 0-63 number of the sq)"""
     return bitmap ^ sq
 

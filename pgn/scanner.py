@@ -4,7 +4,7 @@ http://www.saremba.de/chessgml/standards/pgn/pgn-complete.htm#:~:text=PGN%20is%2
 
 """
 from typing import Sequence
-from pgn_logging import logger
+from pgn.pgn_logging import logger
 import pgn.token_type as token_type
 from pgn.pgn_token import Token
 class Scanner:

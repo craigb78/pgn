@@ -8,3 +8,9 @@ def piece_colour_to_str(piece_colour):
     if piece_colour == BLACK:
         return "BLACK"
     return None
+
+def opposite_colour(piece_colour):
+    if piece_colour == WHITE:
+        return BLACK
+    if piece_colour == BLACK:
+        return WHITE

@@ -15,8 +15,8 @@ from pgn_token import Token
 from pgn.expr import PrintASTVisitor
 from pgn.pgn_parser import PGNParser
 from pgn.pgn_scanner import PGNScanner
+from pgn.regex_scanner import RegexSANScanner
 from pgn.san_parser import SANParser
-from pgn.san_scanner import SANScanner
 from pathlib import Path
 import sys
 from pgn_logging import logger
@@ -52,14 +52,16 @@ def main():
 
                 # we have a white ply
                 white_token: Token = elem.san_moves[0]
-                san_scanner = SANScanner(white_token.lexeme)
+                #san_scanner = SANScanner(white_token.lexeme)
+                san_scanner = RegexSANScanner(white_token.lexeme)
                 white_san_tokens: [Token] = san_scanner.scan_tokens()
 
                 # we have a black ply
                 black_san_tokens = []
                 if len(elem.san_moves) == 2:
                     black_token: Token = elem.san_moves[1]
-                    san_scanner = SANScanner(black_token.lexeme)
+                   # san_scanner = SANScanner(black_token.lexeme)
+                    san_scanner = RegexSANScanner(black_token.lexeme)
                     black_san_tokens: [Token] = san_scanner.scan_tokens()
 
                 san_parser.parse_san_move(white_san_tokens, black_san_tokens)

@@ -1,4 +1,4 @@
-import bit_utils
+import pgn.bit_utils as bit_utils
 
 QUEEN = 2**1
 BISHOP = 2**2

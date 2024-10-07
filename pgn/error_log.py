@@ -1,4 +1,4 @@
-from pgn_logging import logger
+from pgn.pgn_logging import logger
 class ErrorLog:
     def __init__(self):
         self.__errors: (int, str) = []

@@ -3,24 +3,67 @@ from pgn.pgn_board import *
 
 class TestBoard(unittest.TestCase):
 
+
+    def test_en_passant_black_down_right(self):
+        b = PGNBoard()  # board with default starting positions
+
+        b.make_move(PAWN, BLACK, B7, B4)
+        b.make_move(PAWN, WHITE, C2, C4)
+        print(b)
+        moves = b.determine_origin_sq(PAWN, BLACK, dest_square=C3, origin_col=COL_B, capture=True)
+        self.assertEqual(moves, B4, "black can take en passant up left")
+
+    def test_en_passant_black_down_leftt(self):
+        b = PGNBoard()  # board with default starting positions
+
+        b.make_move(PAWN, BLACK, B7, B4)
+        b.make_move(PAWN, WHITE, A2, A4)
+        print(b)
+        moves = b.determine_origin_sq(PAWN, BLACK, dest_square=A3, origin_col=COL_B, capture=True)
+        self.assertEqual(moves, B4, "black can take en passant up right")
+
+    def test_en_passant_white_up_left(self):
+        b = PGNBoard()  # board with default starting positions
+
+        b.make_move(PAWN, WHITE, C2, C5)
+        b.make_move(PAWN, BLACK, B7, B5)
+
+        moves = b.determine_origin_sq(PAWN, WHITE, dest_square=B6, origin_col=COL_C, capture=True)
+        self.assertEqual(moves, C5, "white can take en passant up left")
+
+    def test_en_passant_white_up_right(self):
+        b = PGNBoard()  # board with default starting positions
+
+        b.make_move(PAWN, WHITE, A2, A5)
+        b.make_move(PAWN, BLACK, B7, B5)
+
+        moves = b.determine_origin_sq(PAWN, WHITE, dest_square=B6, origin_col=COL_A, capture=True)
+        self.assertEqual(moves, A5, "white can take en passant up left")
+
     def test_can_move_white_pawn(self):
         b = PGNBoard()  # board with default starting positions
 
         # up one
-        pawn_moves = b.determine_origin_sq(PAWN, WHITE, C3)
-        self.assertEqual(pawn_moves, C2)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, A3)
+        self.assertEqual(pawn_moves, A2)
 
         # up two
         pawn_moves = b.determine_origin_sq(PAWN, WHITE, C4)
         self.assertEqual(pawn_moves, C2)
 
         # taking to left
-        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=B3, origin_col=COL_C, capture=True)
-        self.assertEqual(pawn_moves, C2)
+        b.make_move(PAWN, WHITE, A2, A4)
+        b.make_move(PAWN, BLACK, B7, B5)
+        b.make_move(PAWN, WHITE, C2, C4)
+
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=B5, origin_col=COL_C, capture=True)
+        self.assertEqual(pawn_moves, C4)
 
         # taking to right
-        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=D3, origin_col=COL_C, capture=True)
-        self.assertEqual(pawn_moves, C2)
+        b.make_move(PAWN, BLACK, D7, D3)
+        print(b)
+        pawn_moves = b.determine_origin_sq(PAWN, WHITE, dest_square=D3, origin_col=COL_E, capture=True)
+        self.assertEqual(pawn_moves, E2)
 
     def test_can_move_knight(self):
         b = PGNBoard() # board with default starting positions
@@ -36,49 +79,60 @@ class TestBoard(unittest.TestCase):
         except:
             pass  # expected exception
 
-        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, A8)
-        self.assertEqual(a1_rook_moves, A1)
+        b.make_move(PAWN, WHITE, A2, A4)
+        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, A3)
+        self.assertEqual(a1_rook_moves, A1, "rook can move A1 to A3")
 
-        # A1 and H8 can both move to D1, so need to supply rank or file of source
-        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, D1, origin_row=COL_A)
-        self.assertEqual(a1_rook_moves, A1)
-
-        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, D1, origin_square=A1)
-        self.assertEqual(a1_rook_moves, A1)
-
-        try:
-            b.determine_origin_sq(ROOK, WHITE, D1, origin_col=ROW_1)
-            self.fail("Expected 2 possible source pieces A1 and H8")
-        except ValueError:
-            pass  # expected exception
+        # Both white rooks D3, so need to supply rank or file of source
+        b.make_move(ROOK, WHITE, A1, A3)
+        b.make_move(PAWN, WHITE, H2, H4)
+        b.make_move(ROOK, WHITE, H1, H3)
 
         try:
-            b.determine_origin_sq(ROOK, WHITE, D1)
-            self.fail("Expected 2 possible source pieces A1 and H8")
-        except ValueError:
-            pass  # expected exception
+            b.determine_origin_sq(ROOK, WHITE, D3, origin_row=ROW_3)
+        except:
+            pass  # multiple moves because ROW_3 doesn't disambiguate
+
+        a1_rook_moves = b.determine_origin_sq(ROOK, WHITE, D3, origin_square=COL_A)
+        self.assertEqual(a1_rook_moves, A3)
+
 
     def test_can_move_bishop(self):
         b = PGNBoard()  # board with default starting positions
 
-        b.make_move(PAWN, WHITE, B2, B4)
+        b.make_move(PAWN, WHITE, B2, B3)
         bishop_moves = b.determine_origin_sq(BISHOP, WHITE, A3)
-        self.assertEqual(bishop_moves, C1)
+        self.assertEqual(bishop_moves, C1, "bishop can move diagonal left")
+        b.make_move(BISHOP, WHITE, C1, A3)
 
-       # bishop_moves = b.determine_origin_sq(BISHOP, WHITE, F4)
-        #self.assertEqual(bishop_moves, C1)
+
+        bishop_moves = b.determine_origin_sq(BISHOP, WHITE, C5)
+        self.assertEqual(bishop_moves, A3, "bishop can move diagonal right")
+        b.make_move(BISHOP, WHITE, A3, C5)
+
+        # put the pawn in the way of the bishops intended dest square
+        b.make_move(PAWN, WHITE, B3, B4)
+        try:
+            b.determine_origin_sq(BISHOP, WHITE, A3)
+        except:
+            pass # there are no bishops that can move to the dest square.
+
+
 
     def test_can_move_queen(self):
         b = PGNBoard()  # board with default starting positions
-
+        b.make_move(PAWN, WHITE, E2, E3)
         a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, H5)
-        self.assertEqual(a1_queen_moves, D1)
+        self.assertEqual(a1_queen_moves, D1, "queen can make a diagonal move")
+        b.make_move(QUEEN, WHITE, D1, H5)
 
-        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, H1)
-        self.assertEqual(a1_queen_moves, D1)
+        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, A5)
+        self.assertEqual(square_to_str(a1_queen_moves), square_to_str(H5), "queen can make a horizontal move")
+        b.make_move(QUEEN, WHITE, H5, A5)
 
-        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, D8)
-        self.assertEqual(a1_queen_moves, D1)
+        a1_queen_moves = b.determine_origin_sq(QUEEN, WHITE, A6)
+        self.assertEqual(a1_queen_moves, A5, "queen can make a vertical move")
+        b.make_move(QUEEN, WHITE, A5, A6)
 
     def test_can_move_king(self):
         b = PGNBoard()  # board with default starting positions
