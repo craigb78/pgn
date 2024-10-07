@@ -10,6 +10,7 @@ class PGNPly:
         self.capture: bool = False
         self.castle_kings_side: bool = False
         self.castle_queens_side: bool = False
+        self.promoted_piece_type: int = 0
         self.origin_sq: int = 0
         self.origin_row: int = 0
         self.origin_col: int = 0
@@ -20,8 +21,10 @@ class PGNPly:
                 f"piece_type:{piece_type_to_str(self.piece_type)},"
                 f"capture:{self.capture},"
                 f"castle king:{self.castle_kings_side},"
-                f"castle queen:{self.castle_queens_side})"
-                f"dest_sq:{square_to_str(self.dest_sq)}")
+                f"castle queen:{self.castle_queens_side}),"
+                f"dest_sq:{square_to_str(self.dest_sq)},"
+                f"promoted_piece_type:{piece_type_to_str(self.promoted_piece_type)}"
+                )
 
 
 """

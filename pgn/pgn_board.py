@@ -92,7 +92,7 @@ class PGNBoard:
 
         return (0,0) # there is nothing on the square
 
-    def make_move(self, piece_type, colour, origin_sq, destination_sq):
+    def make_move(self, piece_type, colour, origin_sq, destination_sq, promoted_piece_type=0):
         # when taking, clear any other piece on dest square
         dest_piece_colour, dest_piece_type = self.get_piece(destination_sq)
         if dest_piece_colour == colour:
@@ -105,21 +105,33 @@ class PGNBoard:
             bitmap = bit_utils.clear_mask(bitmap, destination_sq)
             self.__set_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour, bitmap=bitmap)
 
-        if piece_type == PAWN and (dest_piece_colour, dest_piece_type) == (0,0):
-            # check if this is an enpassant move, in which case, take the opposite colour's pawn.
-            en_passant_square = self.is_en_passant(colour, origin_sq, destination_sq)
-            if en_passant_square:
-                # take the opponent's pawn
-                logger.debug(
-                    f"{piece_colour_to_str(colour)} taking enpassant {square_to_str(en_passant_square)}")
-                bitmap = self.__get_bitmap(piece_type=PAWN, colour=opposite_colour(colour))
-                bitmap = bit_utils.clear_mask(bitmap, en_passant_square)
-                self.__set_bitmap(piece_type=PAWN, colour=opposite_colour(colour), bitmap=bitmap)
+        # check if this is an enpassant move, in which case, take the opposite colour's pawn.
+        if en_passant_square := self.is_en_passant(colour, origin_sq, destination_sq):
+            # take the opponent's pawn
+            logger.debug(
+                f"{piece_colour_to_str(colour)} taking enpassant {square_to_str(en_passant_square)}")
+            bitmap = self.__get_bitmap(piece_type=PAWN, colour=opposite_colour(colour))
+            bitmap = bit_utils.clear_mask(bitmap, en_passant_square)
+            self.__set_bitmap(piece_type=PAWN, colour=opposite_colour(colour), bitmap=bitmap)
 
         # move the piece from the origin sq to the new dest dsq
         bitmap = self.__get_bitmap(piece_type=piece_type, colour=colour)
         bitmap = self.__replace(bitmap, origin_sq, destination_sq)
         self.__set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
+
+        # pawn promotion
+        if piece_type == PAWN and promoted_piece_type:
+            if (colour == WHITE and row_8(destination_sq)) or (colour == BLACK and row_1(destination_sq)):
+                # remove pawn
+                bitmap = self.__get_bitmap(piece_type=piece_type, colour=colour)
+                bitmap = bit_utils.clear_mask(bitmap, destination_sq)
+                self.__set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
+
+                # add the promoted piece type
+                bitmap = self.__get_bitmap(piece_type=promoted_piece_type, colour=colour)
+                bitmap = bit_utils.set_mask(bitmap, destination_sq)
+                self.__set_bitmap(piece_type=promoted_piece_type, colour=colour, bitmap=bitmap)
+
 
     def __get_bitmap(self, piece_type, colour) -> int:
         b = 0
@@ -252,8 +264,8 @@ class PGNBoard:
         # but we can assume the PGN file is correct
 
         # swap the king and the rook
-        self.make_move(KING, colour, king_origin_sq, king_dest_sq)
-        self.make_move(ROOK, colour, rook_origin_sq, rook_dest_sq)
+        self.make_move(KING, colour, king_origin_sq, king_dest_sq, 0)
+        self.make_move(ROOK, colour, rook_origin_sq, rook_dest_sq, 0)
 
     def generate_knight_moves(self, origin_square):
         """
@@ -424,7 +436,7 @@ class PGNBoard:
         If this is an enpassant move, return the colour and square of the piece that has been taken (not the dest sq)
         """
         # white is taking en passant
-        if colour == WHITE and row_5(origin_square):
+        if self.get_piece(origin_square) == (WHITE,PAWN) and row_5(origin_square):
             # UP TO LEFT IS VACANT, PIECE TO LEFT IS BLACK PAWN
             if (dest_square == up_left(origin_square)
                     and not self.occupied(up_left(origin_square))
@@ -436,7 +448,7 @@ class PGNBoard:
                     and self.get_piece(right(origin_square)) == (BLACK, PAWN)):
                 return right(origin_square)
 
-        if colour == BLACK and row_4(origin_square):
+        if self.get_piece(origin_square) == (BLACK,PAWN) and row_4(origin_square):
             # DOWN TO RIGHT IS VACANT, PIECE TO RIGHT IS WHITE PAWN
             if (dest_square == down_right(origin_square)
                     and not self.occupied(down_right(origin_square))
@@ -591,7 +603,8 @@ class PGNBoard:
             self.make_move(ply.piece_type,
                            ply.colour,
                            origin_sq,
-                           ply.dest_sq)
+                           ply.dest_sq,
+                           ply.promoted_piece_type)
 
     def is_in_check(self, colour) -> bool:
         """

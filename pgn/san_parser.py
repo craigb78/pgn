@@ -50,6 +50,8 @@ class SANParser:
                 ply.castle_queens_side = True
             elif t.tt == CASTLE_KINGS_SIDE:
                 ply.castle_kings_side = True
+            elif t.tt == PROMOTED_PIECE_TYPE:
+                ply.promoted_piece_type = str_to_piece_type(t.lexeme)
             elif t.tt == EOF:
                 pass
             else:

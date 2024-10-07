@@ -35,4 +35,13 @@ class TestRegexSANScanner(TestCase):
 
         self.assertEqual(tokens[0], Token(CASTLE_KINGS_SIDE, "O-O", 0))
 
+    def test_san_dict_to_tokens_5(self):
+        scanner = RegexSANScanner('h1=Q+') # letter O
+        tokens = scanner.scan_tokens()
+
+        self.assertEqual(tokens[0], Token(PIECE_TYPE, "P", 0))
+        self.assertEqual(tokens[1], Token(COL, "h", 0))
+        self.assertEqual(tokens[2], Token(ROW, "1", 0))
+        self.assertEqual(tokens[3], Token(PROMOTED_PIECE_TYPE, "Q", 0))
+        self.assertEqual(tokens[4], Token(CHECK, "+", 0))
 

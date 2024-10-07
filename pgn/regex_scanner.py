@@ -24,6 +24,7 @@ class RegexSANScanner:
                                  r'(?P<capture>x)?'
                                  r'(?P<dest_col>[a-h])?'
                                  r'(?P<dest_row>[1-8])?'
+                                 r'=?(?P<promoted_piece_type>[QBNR])?'
                                  r'(?P<check>\+[^+]?)?'
                                  r'(?P<checkmate>\+\+|#)?'
                                  )
@@ -59,6 +60,9 @@ class RegexSANScanner:
 
         if lexeme := san_dict.get("dest_row"):
             san_tokens.append(Token(tt.ROW, lexeme, 0))
+
+        if lexeme := san_dict.get("promoted_piece_type"):
+            san_tokens.append(Token(tt.PROMOTED_PIECE_TYPE, lexeme, 0))
 
         if lexeme := san_dict.get("check"):
             san_tokens.append(Token(tt.CHECK, lexeme, 0))

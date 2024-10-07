@@ -27,6 +27,7 @@ CHECKMATE = 103
 CHECK = 105
 EN_PASSANT = 106
 DRAW_OFFERED = 107
+PROMOTED_PIECE_TYPE = 108
 
 # KING = 200
 # QUEEN = 201
@@ -125,6 +126,8 @@ def tt_to_str(tt):
         return "EN_PASSANT"
     elif tt == DRAW_OFFERED:
         return "DRAW_OFFERED"
+    elif tt == PROMOTED_PIECE_TYPE:
+        return "PROMOTED_PIECE_TYPE"
     elif tt == PIECE_TYPE:
         return "PIECE_TYPE"
     elif tt == ROW:
