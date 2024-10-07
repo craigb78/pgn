@@ -457,11 +457,13 @@ class PGNBoard:
             if (dest_square == down_right(origin_square)
                     and not self.occupied(down_right(origin_square))
                     and self.get_piece(right(origin_square)) == (WHITE, PAWN)):
-                return (origin_square)
+                logger.debug("black enpassant down right")
+                return right(origin_square)
             # DOWN TO LEFT IS VACANT, PIECE TO LEFT IS WHITE PAWN
             if (dest_square == down_left(origin_square)
                     and not self.occupied(down_left(origin_square))
                     and self.get_piece(left(origin_square)) == (WHITE, PAWN)):
+                logger.debug("black enpassant down left")
                 return left(origin_square)
 
         return 0 # we are not taking en passsant

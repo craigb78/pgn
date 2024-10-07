@@ -77,8 +77,8 @@ def main():
                     board.play(pgn_move.black_ply)
                 logger.debug(board)
 
-        visitor = PrintASTVisitor()
-        pgn_database.accept(visitor)
+        #visitor = PrintASTVisitor()
+        #pgn_database.accept(visitor)
     except ValueError as err:
         logger.exception("Error is main")
 
