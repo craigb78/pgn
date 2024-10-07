@@ -104,9 +104,8 @@ class PGNBoard:
             bitmap = self.__get_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour)
             bitmap = bit_utils.clear_mask(bitmap, destination_sq)
             self.__set_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour, bitmap=bitmap)
-
-        # check if this is an enpassant move, in which case, take the opposite colour's pawn.
-        if en_passant_square := self.is_en_passant(colour, origin_sq, destination_sq):
+        elif en_passant_square := self.is_en_passant(colour, origin_sq, destination_sq):
+            # check if this is an enpassant move, in which case, take the opposite colour's pawn.
             # take the opponent's pawn
             logger.debug(
                 f"{piece_colour_to_str(colour)} taking enpassant {square_to_str(en_passant_square)}")
