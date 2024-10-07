@@ -64,6 +64,13 @@ class PGNBoard:
     def occupied(self, origin_sq):
         return origin_sq & self.all_pieces()
 
+    def occupied_by_black(self, origin_sq):
+        return origin_sq & self.black_pieces()
+
+    def occupied_by_white(self, origin_sq):
+        return origin_sq & self.white_pieces()
+
+
     def get_piece(self, sq) -> (int, int):
         if bit_utils.is_mask_set(self.__white_pawn, sq):
             return (WHITE, PAWN)
@@ -368,8 +375,6 @@ class PGNBoard:
     def generate_pawn_moves(self, colour, origin_square, capture) -> int:
         possible_dest_squares: int = 0
 
-        logger.debug(f"generate_pawn_moves()/origin_sq: {square_to_str(origin_square)}, up_one: {square_to_str(up_one(origin_square))}")
-
         if colour == WHITE:
             # UP one place. This places must be unoccupied
             if not row_8(origin_square) and not self.occupied(up_one(origin_square)):
@@ -385,19 +390,19 @@ class PGNBoard:
                 # UP TO LEFT IS VACANT, PIECE TO LEFT IS BLACK PAWN
                 if (not self.occupied(up_left(origin_square))
                         and self.get_piece(left(origin_square)) == (BLACK, PAWN)):
-                    possible_dest_squares |= up_left(origin_square)
+                    possible_dest_squares |= up_left(origin_square & ~COL_A)
                 # UP TO RIGHT IS VACANT, PIECE TO RIGHT IS BLACK PAWN
                 if (not self.occupied(up_right(origin_square))
                         and self.get_piece(right(origin_square)) == (BLACK, PAWN)):
-                    possible_dest_squares |= up_right(origin_square)
+                    possible_dest_squares |= up_right(origin_square & ~COL_H)
 
             if capture or possible_dest_squares == 0:  # some pgn games don't indicate pawn captures with the x
                 # DIAGONAL UP LEFT (if is occupied)
-                if self.occupied(up_left(origin_square)):
-                    possible_dest_squares |= up_left(origin_square)
+                if self.occupied_by_black(up_left(origin_square)):
+                    possible_dest_squares |= up_left(origin_square & ~COL_A)
                 # DIAGONAL UP RIGHT (if is occupied)
-                if self.occupied(up_right(origin_square)):
-                    possible_dest_squares |= up_right(origin_square)
+                if self.occupied_by_black(up_right(origin_square)):
+                    possible_dest_squares |= up_right(origin_square & ~COL_H)
         elif colour == BLACK:
             # DOWN one place
             if not row_1(origin_square) and not self.occupied(down_one(origin_square)):
@@ -410,19 +415,19 @@ class PGNBoard:
                 # DOWN TO RIGHT IS VACANT, PIECE TO RIGHT IS WHITE PAWN
                 if (not self.occupied(down_right(origin_square))
                         and self.get_piece(right(origin_square)) == (WHITE, PAWN)):
-                    possible_dest_squares |= down_right(origin_square)
+                    possible_dest_squares |= down_right(origin_square & ~COL_H)
                 # DOWN TO LEFT IS VACANT, PIECE TO LEFT IS WHITE PAWN
                 if (not self.occupied(down_left(origin_square))
                         and self.get_piece(left(origin_square)) == (WHITE, PAWN)):
-                    possible_dest_squares |= down_left(origin_square)
+                    possible_dest_squares |= down_left(origin_square & ~COL_A)
 
             if capture or possible_dest_squares == 0:  # some pgn games don't indicate pawn captures with the x
                 # DIAGONAL DOWN LEFT (if is occupied)
-                if self.occupied(down_left(origin_square)):
-                    possible_dest_squares |= down_left(origin_square)
+                if self.occupied_by_white(down_left(origin_square)):
+                    possible_dest_squares |= down_left(origin_square & ~COL_A)
                 # DIAGONAL DOWN RIGHT (if is occupied)
-                if self.occupied(down_right(origin_square)):
-                    possible_dest_squares |= down_right(origin_square)
+                if self.occupied_by_white(down_right(origin_square)):
+                    possible_dest_squares |= down_right(origin_square & ~COL_H)
         else:
             raise ValueError(f"unknown colour: {colour}")
 
@@ -635,9 +640,12 @@ class PGNBoard:
         """
 
         def in_check(next_move_to_try: int) -> int:
+            logger.debug(f"try_move()/in_check(next_move_to_try={square_to_str(next_move_to_try)} to {square_to_str(dest_sq)})")
             # make the move, then determine if colour is in check
             copied_board = copy.copy(board)
             copied_board.make_move(piece_type, colour, next_move_to_try, dest_sq)
+            logger.debug(f"try_move()/in_check()/test for check")
+
             if not copied_board.is_in_check(colour):
                 logger.info(
                     f"try_move()/next_move_to_try {piece_type_to_str(piece_type)} {piece_colour_to_str(colour)} {square_to_str(next_move_to_try)} to {square_to_str(dest_sq)}")
