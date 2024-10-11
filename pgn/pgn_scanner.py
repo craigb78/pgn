@@ -81,11 +81,12 @@ class PGNScanner:
         :return:
         """
 
-        self.__scanner.match(lambda c: c == '"')
-        self.__scanner.match(lambda c: c.isalpha() or
-                                       c.isdigit() or
-                                       c in [".", "\\", "/", ' ', ',', '-', '?', '&', '(', ')', "'", '`', ':', '+'])
-        self.__scanner.match(lambda c: c == '"')
+#        self.__scanner.match_once('"')
+        # self.__scanner.match(lambda c: c.isalpha() or
+        #                               c.isdigit() or
+        #   c in [".", "\\", "/", ' ', ',', '-', '?', '&', '(', ')', "'", '`', ':', '+'])
+        self.__scanner.match(lambda c: c != '"')
+        self.__scanner.match_once('"')
         self.__scanner.add_token(token_type.STRING)
 
     @staticmethod
