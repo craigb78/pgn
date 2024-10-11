@@ -30,7 +30,7 @@ def main():
 
             exit(-1)
 
-        pgn_file = Path(args[0]).read_text()
+        pgn_file = Path(args[0]).read_text(encoding="ascii", errors="replace")
         scanner = PGNScanner(pgn_file)
         scanner.scan_tokens()
         scanner.print_tokens()
