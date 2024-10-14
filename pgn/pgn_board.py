@@ -7,6 +7,7 @@ import pgn.pretty_print as pretty_print
 from pgn.pgn_logging import logger
 import pgn.bit_utils as bit_utils
 from pgn.pgn_move import PGNPly
+from pgn.turn_counter import TurnCounter
 
 
 class PGNBoard:
@@ -27,6 +28,8 @@ class PGNBoard:
         self.__white_rook = A1 | H1
         self.__white_pawn = ROW_2
 
+        self.turn_counter = TurnCounter()
+
     def clear_board(self):
         self.__black_king = 0
         self.__black_queen = 0
@@ -41,6 +44,8 @@ class PGNBoard:
         self.__white_knight = 0
         self.__white_rook = 0
         self.__white_pawn = 0
+
+        self.turn_counter = TurnCounter()
 
     def black_pieces(self):
         return (self.__black_pawn
@@ -138,6 +143,8 @@ class PGNBoard:
                 bitmap = bit_utils.set_mask(bitmap, destination_sq)
                 self.__set_bitmap(piece_type=promoted_piece_type, colour=colour, bitmap=bitmap)
 
+        self.turn_counter.moved(colour, piece_type, origin_sq, destination_sq)
+
 
     def __get_bitmap(self, piece_type, colour) -> int:
         b = 0
@@ -227,7 +234,7 @@ class PGNBoard:
             (colour, piece_type) = self.get_piece(sq)
             file_str += '|\t' + pretty_print.get_icon(colour, piece_type) + '\t'
             sq = (sq >> 1)
-            if len(file_str) == 32:
+            if len(file_str) == 32: # ie a file's length
                 board_str += str(file_num) + file_str + '|\n'
                 board_str += '\t\u2015\t' * 8 + '\n'
                 file_str = ""
@@ -235,6 +242,7 @@ class PGNBoard:
 
         board_str += " |\tA\t|\tB\t|\tC\t|\tD\t|\tE\t|\tF\t|\tG\t|\tH\t|\n"
         return board_str.rstrip()  # rstrip to remove trailing \n
+
 
     def do_castle(self, castle_kings_side=False, castle_queens_side=False, colour=WHITE):
         rook_origin_sq = 0
@@ -326,11 +334,11 @@ class PGNBoard:
 
         moves = 0
         if self.is_clear_run(ROOK, origin_sq, dest_sq, row):
-            # restrict diagonals to start and end points
+            # restrict to start and end points
             moves |= bit_utils.create_mask_inclusive(origin_sq, dest_sq) & row
 
         if self.is_clear_run(ROOK, origin_sq, dest_sq, col):
-            # restrict diagonals to start and end points
+            # restrict to start and end points
             moves |= bit_utils.create_mask_inclusive(origin_sq, dest_sq) & col
 
         # logger.debug(f"generate_rook_moves for {square_to_str(origin_sq)} to {square_to_str(dest_sq)} are {square_to_str(moves)}")
@@ -576,7 +584,9 @@ class PGNBoard:
         all_pieces_of_type_and_colour = self.__get_bitmap(piece_type=piece_type, colour=colour)
         # 2. list all the pieces of this colour and type that can move to the destination square
         moveable_pieces_of_type_and_colour: int = bit_utils.for_each_bit_set(all_pieces_of_type_and_colour,
-                                                                             highest_bit=A8, func=test)
+                                                                             highest_bit=A8,
+                                                                             lowest_bit=H1,
+                                                                             func=test)
         logger.info("%s %s can move from %s to %s all_pieces: %s",
                     piece_type_to_str(piece_type),
                     piece_colour_to_str(colour),
@@ -654,5 +664,5 @@ class PGNBoard:
                 return next_move_to_try  # then this is a valid move since making it does not put our king in check
             return 0
 
-        moveable = bit_utils.for_each_bit_set(bitmap=moves_to_try, highest_bit=A8, func=in_check)
+        moveable = bit_utils.for_each_bit_set(bitmap=moves_to_try, highest_bit=A8, lowest_bit=H1, func=in_check)
         return moveable

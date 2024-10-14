@@ -27,22 +27,24 @@ def clear_mask(bitmap: int, sq: int):
     return bitmap & ~sq
 
 
-def for_each_bit_set(bitmap: int, highest_bit: int, func) -> int:
+def for_each_bit_set(bitmap: int, highest_bit: int, lowest_bit: int = 0, func = lambda x: x) -> int:
     """
     Execute the supplied function for each bit set in the bitmap
     Accumulate the results of the function and return to caller
     :param bitmap:
-    :param highest_bit
-    :param func:
+    :param highest_bit (inclusive)
+    :param lowest_bit (inclusive)
+    :param func: defaults to identity function
     :return:
     """
     sq = highest_bit
     result_bitmap = 0
-    while sq > 0:
+    while sq >= lowest_bit:
         if is_mask_set(bitmap, sq):
             result_bitmap |= func(sq)
         sq = sq >> 1
     return result_bitmap
+
 
 
 def is_clear_run(bitmap: int, highest_bit: int, lowest_bit: int) -> bool:

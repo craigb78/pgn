@@ -84,22 +84,3 @@ class PGNGame(Expr):
 @dataclass
 class PGNDatabase(Expr):
     games: List[PGNGame] = field(default_factory=list)
-
-
-class Visitor(ABC):
-    @abstractmethod
-    def visit_expr(self, expr: Expr):
-        pass
-
-    @abstractmethod
-    def visit_event_tag(self, event_tag: TagPair):
-        pass
-
-
-class PrintASTVisitor(Visitor):
-
-    def visit_expr(self, expr: Expr):
-        print(f"visiting {expr}")
-
-    def visit_event_tag(self, event_tag: TagPair):
-        print(f"visiting event tag {event_tag.tag_name}")

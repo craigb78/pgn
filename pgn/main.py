@@ -1,4 +1,3 @@
-# TODO
 # need a SAN_parser that processes the output of SAN_Scanner
 # The SAN Parser should use the PGN board and the tokens from the scanner to create "move" objects which can be "played"
 # forward and backwards on a board
@@ -12,10 +11,12 @@
 
 from pgn.pgn_board import PGNBoard
 from pgn.pgn_token import Token
+from pgn.pgn_move import PGNMove
 from pgn.pgn_parser import PGNParser
 from pgn.pgn_scanner import PGNScanner
 from pgn.regex_scanner import RegexSANScanner
 from pgn.san_parser import SANParser
+from pgn.fen_generator import to_fen
 from pathlib import Path
 import sys
 from pgn.pgn_logging import logger
@@ -51,7 +52,6 @@ def main():
 
                 # we have a white ply
                 white_token: Token = elem.san_moves[0]
-                #san_scanner = SANScanner(white_token.lexeme)
                 san_scanner = RegexSANScanner(white_token.lexeme)
                 white_san_tokens: [Token] = san_scanner.scan_tokens()
 
@@ -59,13 +59,12 @@ def main():
                 black_san_tokens = []
                 if len(elem.san_moves) == 2:
                     black_token: Token = elem.san_moves[1]
-                   # san_scanner = SANScanner(black_token.lexeme)
                     san_scanner = RegexSANScanner(black_token.lexeme)
                     black_san_tokens: [Token] = san_scanner.scan_tokens()
 
                 san_parser.parse_san_move(white_san_tokens, black_san_tokens)
 
-            pgn_moves = san_parser.collect()
+            pgn_moves: [PGNMove] = san_parser.collect()
 
             # TODO add the event information to the list of PGN moves
             board = PGNBoard()
@@ -75,6 +74,7 @@ def main():
                 if pgn_move.black_ply:
                     board.play(pgn_move.black_ply)
                 logger.debug(board)
+                logger.debug(to_fen(board))
 
     except ValueError as err:
         logger.exception("Error is main")
