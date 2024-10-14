@@ -10,16 +10,15 @@
 # 4. end result should be ability to print list of PGNMove objects, with each move object showing piece type, colour
 # , source square, dest sq, and so on.
 
-from pgn_board import PGNBoard
-from pgn_token import Token
-from pgn.expr import PrintASTVisitor
+from pgn.pgn_board import PGNBoard
+from pgn.pgn_token import Token
 from pgn.pgn_parser import PGNParser
 from pgn.pgn_scanner import PGNScanner
 from pgn.regex_scanner import RegexSANScanner
 from pgn.san_parser import SANParser
 from pathlib import Path
 import sys
-from pgn_logging import logger
+from pgn.pgn_logging import logger
 
 
 def main():
@@ -77,8 +76,6 @@ def main():
                     board.play(pgn_move.black_ply)
                 logger.debug(board)
 
-        #visitor = PrintASTVisitor()
-        #pgn_database.accept(visitor)
     except ValueError as err:
         logger.exception("Error is main")
 
