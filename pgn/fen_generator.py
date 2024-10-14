@@ -83,7 +83,7 @@ def castling_availability(board: PGNBoard):
     if board.turn_counter.black_queens_castle_avail:
         ca += "q"
 
-    return ca
+    return ca or '-'
 
 
 def en_passant_target_sq(board: PGNBoard):

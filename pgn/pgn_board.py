@@ -106,6 +106,7 @@ class PGNBoard:
 
     def make_move(self, piece_type, colour, origin_sq, destination_sq, promoted_piece_type=0):
         # when taking, clear any other piece on dest square
+        capture = False
         dest_piece_colour, dest_piece_type = self.get_piece(destination_sq)
         if dest_piece_colour == colour:
             raise ValueError("expected piece of opposite colour")
@@ -116,6 +117,7 @@ class PGNBoard:
             bitmap = self.__get_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour)
             bitmap = bit_utils.clear_mask(bitmap, destination_sq)
             self.__set_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour, bitmap=bitmap)
+            capture = True
         elif en_passant_square := self.is_en_passant(colour, origin_sq, destination_sq):
             # check if this is an enpassant move, in which case, take the opposite colour's pawn.
             # take the opponent's pawn
@@ -143,7 +145,7 @@ class PGNBoard:
                 bitmap = bit_utils.set_mask(bitmap, destination_sq)
                 self.__set_bitmap(piece_type=promoted_piece_type, colour=colour, bitmap=bitmap)
 
-        self.turn_counter.moved(colour, piece_type, origin_sq, destination_sq)
+        self.turn_counter.moved(colour, piece_type, origin_sq, destination_sq, capture)
 
 
     def __get_bitmap(self, piece_type, colour) -> int:

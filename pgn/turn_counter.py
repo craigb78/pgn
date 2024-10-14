@@ -5,10 +5,11 @@ from pgn.piece_type import *
 class TurnCounter:
     def __init__(self):
         # number of half moves
+        #Halfmove clock: The number of halfmoves since the last capture or pawn advance, used for the fifty-move rule.
         self.halfmoves = 0
 
         # number of full moves
-        self.fullmoves = 0
+        self.fullmoves = 1
 
         # next colour to move
         self.active_colour = WHITE
@@ -22,7 +23,7 @@ class TurnCounter:
         self.white_kings_castle_avail = True
         self.white_queens_castle_avail = True
 
-    def moved(self, colour, piece_type, origin_sq, dest_sq):
+    def moved(self, colour, piece_type, origin_sq, dest_sq, capture):
         if (piece_type == PAWN
                 and bit_utils.is_mask_set(origin_sq, ROW_2)
                 and bit_utils.is_mask_set(origin_sq, ROW_4)
@@ -58,9 +59,10 @@ class TurnCounter:
 
         self.active_colour = opposite_colour(colour)
 
-        self.halfmoves += 1
+        if piece_type != PAWN or not capture:
+            self.halfmoves += 1
+        else:
+            self.halfmoves = 0
 
         if colour == BLACK:
             self.fullmoves += 1
-
-
