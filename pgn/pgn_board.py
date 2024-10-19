@@ -114,41 +114,40 @@ class PGNBoard:
             # remove the piece that has been taken
             logger.debug(
                 f"taking {piece_colour_to_str(dest_piece_colour)} {piece_type_to_str(dest_piece_type)} on {square_to_str(destination_sq)}")
-            bitmap = self.__get_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour)
+            bitmap = self.get_bitmap(piece_type=dest_piece_type, colour=dest_piece_colour)
             bitmap = bit_utils.clear_mask(bitmap, destination_sq)
-            self.__set_bitmap(piece_type=dest_piece_type,colour=dest_piece_colour, bitmap=bitmap)
+            self.set_bitmap(piece_type=dest_piece_type, colour=dest_piece_colour, bitmap=bitmap)
             capture = True
         elif en_passant_square := self.is_en_passant(colour, origin_sq, destination_sq):
             # check if this is an enpassant move, in which case, take the opposite colour's pawn.
             # take the opponent's pawn
             logger.debug(
                 f"{piece_colour_to_str(colour)} taking enpassant {square_to_str(en_passant_square)}")
-            bitmap = self.__get_bitmap(piece_type=PAWN, colour=opposite_colour(colour))
+            bitmap = self.get_bitmap(piece_type=PAWN, colour=opposite_colour(colour))
             bitmap = bit_utils.clear_mask(bitmap, en_passant_square)
-            self.__set_bitmap(piece_type=PAWN, colour=opposite_colour(colour), bitmap=bitmap)
+            self.set_bitmap(piece_type=PAWN, colour=opposite_colour(colour), bitmap=bitmap)
 
         # move the piece from the origin sq to the new dest dsq
-        bitmap = self.__get_bitmap(piece_type=piece_type, colour=colour)
+        bitmap = self.get_bitmap(piece_type=piece_type, colour=colour)
         bitmap = self.__replace(bitmap, origin_sq, destination_sq)
-        self.__set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
+        self.set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
 
         # pawn promotion
         if piece_type == PAWN and promoted_piece_type:
             if (colour == WHITE and row_8(destination_sq)) or (colour == BLACK and row_1(destination_sq)):
                 # remove pawn
-                bitmap = self.__get_bitmap(piece_type=piece_type, colour=colour)
+                bitmap = self.get_bitmap(piece_type=piece_type, colour=colour)
                 bitmap = bit_utils.clear_mask(bitmap, destination_sq)
-                self.__set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
+                self.set_bitmap(piece_type=piece_type, colour=colour, bitmap=bitmap)
 
                 # add the promoted piece type
-                bitmap = self.__get_bitmap(piece_type=promoted_piece_type, colour=colour)
+                bitmap = self.get_bitmap(piece_type=promoted_piece_type, colour=colour)
                 bitmap = bit_utils.set_mask(bitmap, destination_sq)
-                self.__set_bitmap(piece_type=promoted_piece_type, colour=colour, bitmap=bitmap)
+                self.set_bitmap(piece_type=promoted_piece_type, colour=colour, bitmap=bitmap)
 
         self.turn_counter.moved(colour, piece_type, origin_sq, destination_sq, capture)
 
-
-    def __get_bitmap(self, piece_type, colour) -> int:
+    def get_bitmap(self, piece_type, colour) -> int:
         b = 0
         if bit_utils.is_mask_set(colour, WHITE):
             if bit_utils.is_mask_set(piece_type, PAWN):
@@ -180,7 +179,7 @@ class PGNBoard:
 
         return b
 
-    def __set_bitmap(self, piece_type, colour, bitmap: int) -> None:
+    def set_bitmap(self, piece_type, colour, bitmap: int) -> None:
         if colour == WHITE:
             if piece_type == PAWN:
                 self.__white_pawn = bitmap
@@ -216,7 +215,6 @@ class PGNBoard:
 
     def __replace(self, bitmap, origin_sq, dest_sq):
         """ move the piece from the origin sq to the dest sq"""
-
         if not bit_utils.is_mask_set(bitmap, origin_sq):
             raise ValueError("piece is not on origin sq")
 
@@ -244,7 +242,6 @@ class PGNBoard:
 
         board_str += " |\tA\t|\tB\t|\tC\t|\tD\t|\tE\t|\tF\t|\tG\t|\tH\t|\n"
         return board_str.rstrip()  # rstrip to remove trailing \n
-
 
     def do_castle(self, castle_kings_side=False, castle_queens_side=False, colour=WHITE):
         rook_origin_sq = 0
@@ -276,7 +273,8 @@ class PGNBoard:
         else:
             raise ValueError("castling expected")
 
-        # could do some validation here eg (does the king exist on the expected sq? does the rook exist on the expected sq?)
+        # could do some validation here eg (does the king exist on the expected sq?
+        # does the rook exist on the expected sq?)
         # but we can assume the PGN file is correct
 
         # swap the king and the rook
@@ -583,7 +581,7 @@ class PGNBoard:
             return 0
 
         # 1. do we have a piece of the given colour and type?
-        all_pieces_of_type_and_colour = self.__get_bitmap(piece_type=piece_type, colour=colour)
+        all_pieces_of_type_and_colour = self.get_bitmap(piece_type=piece_type, colour=colour)
         # 2. list all the pieces of this colour and type that can move to the destination square
         moveable_pieces_of_type_and_colour: int = bit_utils.for_each_bit_set(all_pieces_of_type_and_colour,
                                                                              highest_bit=A8,
@@ -654,11 +652,11 @@ class PGNBoard:
         """
 
         def in_check(next_move_to_try: int) -> int:
-            logger.debug(f"try_move()/in_check(next_move_to_try={square_to_str(next_move_to_try)} to {square_to_str(dest_sq)})")
+         #   logger.debug(f"try_move()/in_check(next_move_to_try={square_to_str(next_move_to_try)} to {square_to_str(dest_sq)})")
             # make the move, then determine if colour is in check
             copied_board = copy.copy(board)
             copied_board.make_move(piece_type, colour, next_move_to_try, dest_sq)
-            logger.debug(f"try_move()/in_check()/test for check")
+          #  logger.debug(f"try_move()/in_check()/test for check")
 
             if not copied_board.is_in_check(colour):
                 logger.info(

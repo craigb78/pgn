@@ -4,10 +4,13 @@ from pgn.pgn_board import PGNBoard
 import pgn.fen_generator
 
 class TestFenGenerator(unittest.TestCase):
-    def test(self):
+    def test_to_fen(self):
         board = PGNBoard()
         self.assertEqual("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0", pgn.fen_generator.to_fen(board))
 
+    def test_expand_empty(self):
+        self.assertEqual("rnbqkbnr/pppppppp/11111111/11111111/11111111/11111111/111PPPPP/RNBQKBNR",
+                         pgn.fen_generator.expand_empty("rnbqkbnr/pppppppp/8/8/8/8/3PPPPP/RNBQKBNR"))
 
     def test_replace_empty(self):
         self.assertEqual("ppp3pp", pgn.fen_generator.replace_empty("ppp111pp"))

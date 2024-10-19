@@ -9,8 +9,33 @@ from pgn.piece_type import *
 from pgn.piece_colours import *
 
 
+def from_fen_icon(icon: str) -> (int, int):
+    if icon.isupper():
+        colour = WHITE
+    else:
+        colour = BLACK
+
+    if icon == 'P':
+        piece_type = PAWN
+    elif icon == 'R':
+        piece_type = ROOK
+    elif icon == 'N':
+        piece_type = KNIGHT
+    elif icon == 'B':
+        piece_type = BISHOP
+    elif icon == 'Q':
+        piece_type = QUEEN
+    elif icon == 'K':
+        piece_type = KING
+    else:
+        colour = 0
+        piece_type = 0
+
+    return (colour, piece_type)
+
+
 def get_fen_icon(colour, piece_type):
-    icon = '1'  # blank square
+    icon = '1' # blank square
     if piece_type == PAWN:
         icon = 'P'
     elif piece_type == ROOK:
@@ -35,6 +60,7 @@ def get_fen_icon(colour, piece_type):
 def is_number(ch):
     return re.match(r"(\d)", ch) is not None
 
+
 def pieces(board: PGNBoard):
     fen_str = ""
     sq = A8
@@ -46,7 +72,7 @@ def pieces(board: PGNBoard):
     return replace_empty(fen_str)
 
 
-def replace_empty(in_str):
+def replace_empty(in_str: str):
     """
     replace any sequences of  1s (empties) in the input with the length of the seq
     eg
@@ -62,10 +88,32 @@ def replace_empty(in_str):
             fen_str += icon
     return fen_str
 
+
+def expand_empty(in_str: str):
+    """
+    replace any numbers in the input indicating sequences of empty squares
+    with a 1 for each empty square
+    :param in_str: ppp3p1 becomes ppp111p1
+    """
+    fen_str = ""
+    for icon in in_str:
+        if icon.isdigit():
+            fen_str += '1' * int(icon)  # replace the number with that a sequence of 1's
+        else:
+            fen_str += icon
+    return fen_str
+
+
 def active_colour(board: PGNBoard):
     if board.turn_counter.active_colour == WHITE:
         return "w"
     return "b"
+
+
+def parse_active_colour(active_colour: str) -> int:
+    if active_colour == 'w':
+        return WHITE
+    return BLACK
 
 
 def castling_availability(board: PGNBoard):
@@ -110,3 +158,41 @@ def to_fen(board: PGNBoard):
             f"{en_passant_target_sq(board)} "
             f"{half_moves(board)} "
             f"{full_moves(board)}")
+
+
+def to_board(fen_str: str, board: PGNBoard):
+    """
+    use a fen string to populate the board
+    :param fen_str:
+    :param board:
+    :return:
+    """
+    fields = fen_str.split(' ')
+    if not fields or len(fields) != 6:  # 6 expected fields
+        raise ValueError()
+
+    board.turn_counter.active_colour=parse_active_colour(fields[1])
+    board.turn_counter.en_passant_sq = str_to_square(fields[3])
+
+    castle_avail = fields[2]
+    board.turn_counter.black_kings_castle_avail = 'k' in castle_avail
+    board.turn_counter.black_queens_castle_avail = 'q' in castle_avail
+    board.turn_counter.white_kings_castle_avail = 'K' in castle_avail
+    board.turn_counter.white_quees_castle_avail = 'Q' in castle_avail
+
+    board.turn_counter.halfmoves = int(fields[4])
+    board.turn_counter.fullmoves = int(fields[5])
+
+    populate_board(expand_empty(fields[2]), board)
+
+
+def populate_board(fen_str, board):
+    bitmap_dict = {} # key = (colour, piece_type) -> value = bitmap
+    for index, icon in enumerate(fen_str):  # index: 0 = A8, 1 = B8 etc
+        colour_piece_type = from_fen_icon(icon)
+        bitmap = bitmap_dict.get(colour_piece_type, 0)
+        bitmap |= A8 >> index
+        bitmap_dict[colour_piece_type] = bitmap
+
+    for colour_piece_type, bitmap in bitmap_dict.items():
+        board.set_bitmap(colour_piece_type[0], colour_piece_type[1], bitmap)
